@@ -442,8 +442,15 @@ namespace MicroCBuilder.Views
                 sw.Start();
                 if (CurrentTabContent is BuildPage page && page.DataContext is BuildPageViewModel vm)
                 {
-                    var text = SearchTextBox.Text;
                     Item item = default;
+                    var text = SearchTextBox.Text;
+                    if (Uri.IsWellFormedUriString(text, UriKind.Absolute))
+                    {
+                        var uri = new Uri(text);
+                        var uriMatch = Regex.Match(text, "\\.com(\\/.*)");
+                        item = await Item.FromUrl(uriMatch.Groups[1].Value, Settings.StoreID());
+                    }
+
                     var match = Regex.Match(text, "^(\\d{6})(?:(?:.{4}$)|$)");
                     if(match.Success)
                     {
