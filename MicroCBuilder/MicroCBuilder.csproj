@@ -291,15 +291,6 @@
     <PackageReference Include="FuzzySharp">
       <Version>2.0.2</Version>
     </PackageReference>
-    <PackageReference Include="Lucene.Net">
-      <Version>4.8.0-beta00014</Version>
-    </PackageReference>
-    <PackageReference Include="Lucene.Net.Analysis.Common">
-      <Version>4.8.0-beta00014</Version>
-    </PackageReference>
-    <PackageReference Include="Lucene.Net.QueryParser">
-      <Version>4.8.0-beta00014</Version>
-    </PackageReference>
     <PackageReference Include="micro-c-lib">
       <Version>1.0.9</Version>
     </PackageReference>

@@ -1,92 +1,105 @@
-﻿using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Documents;
-using Lucene.Net.Index;
-using Lucene.Net.Sandbox.Queries;
-using Lucene.Net.Search;
-using Lucene.Net.Store;
-using Lucene.Net.Util;
-using MicroCLib.Models;
+﻿using MicroCLib.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Lucene.Net.Documents.Extensions;
+using FuzzySharp.SimilarityRatio;
+using FuzzySharp.SimilarityRatio.Scorer.Composite;
+using FuzzySharp;
+using FuzzySharp.SimilarityRatio.Scorer.StrategySensitive;
 
 namespace MicroCBuilder
 {
     public static class LocalSearch
     {
-        static bool Initialized = false;
-        static LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
-        static string Path => $"{Windows.Storage.ApplicationData.Current.LocalCacheFolder.Path}/Index";
-        static IndexWriter? writer;
+        static Dictionary<string, int> IdFilterScores = new Dictionary<string, int>();
+
         public static void Init()
         {
-            if(Initialized)
-            {
-                return;
-            }
-            Initialized = true;
-
-            var dir = FSDirectory.Open(Path);
-            //create an analyzer to process the text
-            var analyzer = new StandardAnalyzer(AppLuceneVersion);
-
-            //create an index writer
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer);
-            writer = new IndexWriter(dir, indexConfig);
 
         }
 
         public static void ReplaceItems(List<Item> items)
         {
-            if(writer == null)
-            {
-                return;
-            }
-
-            writer.DeleteAll();
-            writer.Flush(triggerMerge: false, applyAllDeletes: false);
-            writer.Commit();
-            for (int i = 0; i < items.Count; i++)
-            {
-                var item = items[i];
-                var doc = new Document()
-                {
-                    new TextField("Name", item.Name, Field.Store.YES),
-                    new TextField("Brand", item.Brand, Field.Store.YES),
-                    new Int32Field("index", i, Field.Store.YES)
-                };
-                writer.AddDocument(doc);
-            }
-            writer.Flush(triggerMerge: false, applyAllDeletes: false);
-            writer.Commit();
+            IdFilterScores.Clear();
         }
 
         public static IEnumerable<Item> Search(string query, List<Item> items)
         {
-            var phrase = new FuzzyLikeThisQuery(10, new StandardAnalyzer(LuceneVersion.LUCENE_48));
-            //var phrase = parser.Parse($"{query}");
-            //var phrase = new Lucene.Net.Search.WildcardQuery(new Term("Name", query));
-            var parts = query.Split(' ');
-            foreach (var part in parts)
-            {
-                phrase.AddTerms(part, "Name", 0, 20);
-            }
-            phrase.AddTerms(parts[0], "Brand", 0, 5);
+            var split = query.Split(' ');
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
 
-            var searcher = new IndexSearcher(writer.GetReader(true));
-
-            var hits = searcher.Search(phrase, 50).ScoreDocs;
-            Debug.WriteLine($"Hit :{hits.Count()}");
-            foreach (var hit in hits)
+            var ret = items.Select(item =>
             {
-                var doc = searcher.Doc(hit.Doc);
-                var index = doc.GetField<StoredField>("index").GetInt32Value().Value;
-                var item = items[index];
-                yield return item;
+                if(item.SKU == query)
+                {
+                    return (item, score: 0);
+                }
+                var brandScore = Process.ExtractOne(item.Brand, split, scorer: ScorerCache.Get<WeightedRatioScorer>()).Score;
+                var nameScore = Fuzz.WeightedRatio(item.Name, query, FuzzySharp.PreProcess.PreprocessMode.Full);
+
+                var importantSpecs = ImportantSpecs(item);
+                int maxSpecScore = 0;
+                foreach (var spec in importantSpecs)
+                {
+                    if (item.Specs.ContainsKey(spec))
+                    {
+                        //var specScore = Fuzz.Ratio(i.Specs[spec], FilterText, FuzzySharp.PreProcess.PreprocessMode.Full);
+                        var specScore = Process.ExtractOne(item.Specs[spec], split, scorer: ScorerCache.Get<DefaultRatioScorer>()).Score;
+                        if (specScore > maxSpecScore)
+                        {
+                            maxSpecScore = specScore;
+                        }
+                    }
+                }
+
+                //customize weights of scoring if necessary
+                var maxScore = new int[] {
+                        (int)(brandScore   * 1),
+                        (int)(nameScore    * 1),
+                        (int)(maxSpecScore * 1)
+                    }.Sum();
+
+                //for debugging purposes
+                item.Stock = maxScore.ToString();
+
+                if (IdFilterScores.ContainsKey(item.ID))
+                {
+                    IdFilterScores[item.ID] = maxScore;
+                }
+                else
+                {
+                    IdFilterScores.Add(item.ID, maxScore);
+                }
+                return (item, score: maxScore);
+            }).Where(result => result.score > 50).OrderByDescending(result => result.score).Select(result => result.item);
+            sw.Stop();
+            //System.Diagnostics.Debug.WriteLine($"ELAPSED {sw.Elapsed.TotalMilliseconds} ms");
+            return ret;
+        }
+
+        static IEnumerable<string> ImportantSpecs(Item i)
+        {
+            switch (i.ComponentType)
+            {
+                case BuildComponent.ComponentType.CPU:
+                    yield return "Processor";
+                    break;
+                case BuildComponent.ComponentType.Motherboard:
+                    yield return "Socket Type";
+                    yield return "North Bridge";
+                    break;
+                case BuildComponent.ComponentType.Case:
+                    yield return "Max Motherboard Size";
+                    break;
+                case BuildComponent.ComponentType.PowerSupply:
+                    yield return "Wattage";
+                    break;
+                case BuildComponent.ComponentType.GPU:
+                    yield return "GPU Chipset";
+                    break;
             }
         }
     }

@@ -1,15 +1,5 @@
 ﻿using FuzzySharp.SimilarityRatio;
 using FuzzySharp.SimilarityRatio.Scorer.StrategySensitive;
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Documents;
-using Lucene.Net.Documents.Extensions;
-using Lucene.Net.Index;
-using Lucene.Net.QueryParsers.Classic;
-using Lucene.Net.QueryParsers.Xml.Builders;
-using Lucene.Net.Sandbox.Queries;
-using Lucene.Net.Search;
-using Lucene.Net.Store;
-using Lucene.Net.Util;
 using MicroCLib.Models;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.UI.Xaml.Controls;

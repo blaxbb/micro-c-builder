@@ -1,5 +1,4 @@
-﻿using Lucene.Net.Util;
-using MicroCLib.Models;
+﻿using MicroCLib.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
