@@ -447,8 +447,8 @@ namespace MicroCBuilder.Views
                     if (Uri.IsWellFormedUriString(text, UriKind.Absolute))
                     {
                         var uri = new Uri(text);
-                        var uriMatch = Regex.Match(text, "\\.com(\\/.*)");
-                        item = await Item.FromUrl(uriMatch.Groups[1].Value, Settings.StoreID());
+                        var uriMatch = Regex.Match(text, "\\.com.*?(product.*)");
+                        item = await Item.FromUrl($"/{uriMatch.Groups[1].Value}", Settings.StoreID());
                     }
 
                     var match = Regex.Match(text, "^(\\d{6})(?:(?:.{4}$)|$)");
