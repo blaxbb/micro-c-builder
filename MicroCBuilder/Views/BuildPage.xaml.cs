@@ -577,7 +577,7 @@ namespace MicroCBuilder.Views
             var cpu = vm.Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.CPU);
             var gpu = vm.Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.GPU);
             var ram = vm.Components.Where(c => c.Item != null && c.Type == BuildComponent.ComponentType.RAM);
-            var ssd = vm.Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.SSD);
+            var ssds = vm.Components.Where(c => c.Item != null && c.Type == BuildComponent.ComponentType.SSD);
             var _case = vm.Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.Case);
 
             if (cpu?.Item != null && cpu.Item.Specs.ContainsKey("Processor"))
@@ -605,9 +605,12 @@ namespace MicroCBuilder.Views
                 }
                 promoItems.Add(new TextBlock() { Text = $"{total}GB {speed}Mhz RAM" });
             }
-            if(ssd?.Item != null && ssd.Item.Specs.ContainsKey("Capacity") && ssd.Item.Specs.ContainsKey("Interface"))
+            foreach (var ssd in ssds)
             {
-                promoItems.Add(new TextBlock() { Text = $"{ssd.Item.Specs["Capacity"]} {ssd.Item.Specs["Interface"]} SSD" });
+                if (ssd?.Item != null && ssd.Item.Specs.ContainsKey("Capacity") && ssd.Item.Specs.ContainsKey("Interface"))
+                {
+                    promoItems.Add(new TextBlock() { Text = $"{ssd.Item.Specs["Capacity"]} {ssd.Item.Specs["Interface"]} SSD" });
+                }
             }
             if(_case?.Item != null)
             {
