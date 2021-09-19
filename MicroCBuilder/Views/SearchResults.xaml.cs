@@ -204,7 +204,7 @@ namespace MicroCBuilder.Views
 
             BuildComponent c;
             
-            foreach(var hint in BuildComponentDependency.Dependencies.Where(d => d is FieldContainsDependency f).Cast<FieldContainsDependency>())
+            foreach(var hint in BuildComponentDependency.Dependencies.Where(d => d is FieldContainsDependency f && !d.GetType().IsSubclassOf(typeof(FieldContainsDependency))).Cast<FieldContainsDependency>())
             {
                 BuildComponent? otherComponent = null;
                 string? searchFieldName = null;
@@ -237,10 +237,20 @@ namespace MicroCBuilder.Views
                         var vals = otherComponent.Item.Specs[otherFieldName].Split('\n');
                         foreach(var val in vals)
                         {
-                            filter.Value.Add(val);
+                            var existing = filter.Options.FirstOrDefault(f => f.Contains(val));
+                            if (existing != null)
+                            {
+                                filter.Value.Add(existing);
+                            }
                         }
                     }
                 }
+            }
+
+            var stockFilter = Filters.FirstOrDefault(f => f.Category == "Stock");
+            if(stockFilter != null)
+            {
+                stockFilter.Value.Add("In Stock");
             }
 
             HandleQuery("");
@@ -520,7 +530,8 @@ namespace MicroCBuilder.Views
         {
             "Stock",
             "Brand",
-            "Graphics Specifications"
+            "Graphics Specifications",
+            "Compatibility"
         };
 
         private static string[] MOBO_FILTERS = new string[]
@@ -541,6 +552,7 @@ namespace MicroCBuilder.Views
             "Memory Type",
             "Memory Capacity",
             "Memory Speed (MHz)",
+            "CAS Latency",
             "LED Color"
         };
 
