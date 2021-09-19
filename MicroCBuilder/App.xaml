@@ -13,6 +13,7 @@
                     <converters:NullVisibilityConverter x:Key="ShowIfNull" NullIsCollapsed="False"/>
                     <converters:QuantityBackgroundConverter x:Key="QuantityBackground"/>
                     <converters:SplitStringConverter x:Key="SplitStringConverter"/>
+                    <converters:StringCSVConverter x:Key="StringCSVConverter"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

@@ -24,11 +24,11 @@
             </MenuBarItem>
         </MenuBar>
         <ScrollViewer Grid.Row="0" Grid.Column="1"  HorizontalScrollBarVisibility="Auto">
-            <controls:ItemsRepeater ItemsSource="{Binding Filters}">
+            <controls:ItemsRepeater ItemsSource="{Binding Filters}" x:Name="filterRepeater">
                 <controls:ItemsRepeater.ItemTemplate>
                     <DataTemplate>
                         <Border BorderThickness="0,0,1,0" BorderBrush="Black" ToolTipService.ToolTip="{Binding Category}">
-                            <Grid x:Name="filterGrid" Padding="5" Margin="0" ColumnSpacing="0">
+                            <Grid Padding="5" Margin="0" ColumnSpacing="0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
@@ -37,16 +37,16 @@
                                 <Button Grid.Column="1" Style="{ThemeResource ButtonRevealStyle}">
                                     <Button.Content>
                                         <Grid>
-                                            <TextBlock Text="{Binding Value}" Visibility="{Binding Value, Converter={StaticResource HideIfNull}}"/>
+                                            <TextBlock Text="{Binding Value, Converter={StaticResource StringCSVConverter}}" Visibility="{Binding Value, Converter={StaticResource HideIfNull}}"/>
                                             <TextBlock Text="{Binding Category}" Visibility="{Binding Value, Converter={StaticResource ShowIfNull}}"/>
                                         </Grid>
                                     </Button.Content>
                                     <Button.Flyout>
                                         <Flyout>
-                                            <ListView ItemsSource="{Binding Options}" SelectedItem="{Binding Value, Mode=TwoWay}">
+                                            <ListView ItemsSource="{Binding Options}" SelectionMode="None" Loaded="ListView_Loaded">
                                                 <ListView.ItemTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding}"/>
+                                                        <CheckBox Content="{Binding}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
                                                     </DataTemplate>
                                                 </ListView.ItemTemplate>
                                             </ListView>

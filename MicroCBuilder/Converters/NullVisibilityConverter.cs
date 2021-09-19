@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,6 +30,10 @@ namespace MicroCBuilder.Converters
                 //false -> true -> collapsed
                 //false -> false   -> visible
                 return b == NullIsCollapsed ? Visibility.Visible : Visibility.Collapsed;
+            }
+            if(value is IList list)
+            {
+                return (list == null || list.Count == 0) == NullIsCollapsed ? Visibility.Collapsed : Visibility.Visible;
             }
 
             if(value is null)

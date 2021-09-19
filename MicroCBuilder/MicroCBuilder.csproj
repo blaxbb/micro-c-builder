@@ -127,6 +127,7 @@
     <Compile Include="Converters\NullVisibilityConverter.cs" />
     <Compile Include="Converters\QuantityBackgroundConverter.cs" />
     <Compile Include="Converters\SplitStringConverter.cs" />
+    <Compile Include="Converters\StringCSVConverter.cs" />
     <Compile Include="Converters\StringFormatConverter.cs" />
     <Compile Include="LocalSearch.cs" />
     <Compile Include="MCOLBuildContext.cs" />

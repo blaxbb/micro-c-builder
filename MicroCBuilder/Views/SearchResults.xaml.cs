@@ -1,6 +1,7 @@
 ﻿using FuzzySharp.SimilarityRatio;
 using FuzzySharp.SimilarityRatio.Scorer.StrategySensitive;
 using MicroCLib.Models;
+using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.UI.Xaml.Controls;
 using System;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -57,6 +59,20 @@ namespace MicroCBuilder.Views
         public static readonly DependencyProperty ComponentTypeProperty =
             DependencyProperty.Register("ComponentType", typeof(BuildComponent.ComponentType), typeof(SearchResults), new PropertyMetadata(BuildComponent.ComponentType.CaseFan, new PropertyChangedCallback(ComponentChanged)));
 
+
+
+        public IList<BuildComponent> BuildComponents
+        {
+            get { return (IList<BuildComponent>)GetValue(BuildComponentsProperty); }
+            set { SetValue(BuildComponentsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for BuildComponents.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty BuildComponentsProperty =
+            DependencyProperty.Register("BuildComponents", typeof(IList<BuildComponent>), typeof(SearchResults), new PropertyMetadata(null));
+
+
+
         private static void ComponentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if(d is SearchResults comp)
@@ -87,7 +103,7 @@ namespace MicroCBuilder.Views
             DataContext = this;
             dataGrid.CanUserSortColumns = true;
             Filters.CollectionChanged += (sender, args) => UpdateFilter();
-
+            
             LocalSearch.Init();
         }
 
@@ -186,8 +202,74 @@ namespace MicroCBuilder.Views
                 FilterMenuBar.Items.Add(root);
             }
 
+            BuildComponent c;
+            
+            foreach(var hint in BuildComponentDependency.Dependencies.Where(d => d is FieldContainsDependency f).Cast<FieldContainsDependency>())
+            {
+                BuildComponent? otherComponent = null;
+                string? searchFieldName = null;
+                string? otherFieldName = null;
+
+                if (hint.FirstType == this.ComponentType)
+                {
+                    otherComponent = BuildComponents.FirstOrDefault(c => c.Type == hint.SecondType && c.Item != null);
+                    searchFieldName = hint.FirstFieldName;
+                    otherFieldName = hint.SecondFieldName;
+                }
+                else if (hint.SecondType == this.ComponentType)
+                {
+                    otherComponent = BuildComponents.FirstOrDefault(c => c.Type == hint.FirstType && c.Item != null);
+                    searchFieldName = hint.SecondFieldName;
+                    otherFieldName = hint.FirstFieldName;
+                }
+                
+                if(otherComponent == null || string.IsNullOrWhiteSpace(searchFieldName) || string.IsNullOrWhiteSpace(otherFieldName))
+                {
+                    continue;
+                }
+
+                var filter = Filters.FirstOrDefault(f => f.Category == searchFieldName);
+                if (filter != null && otherComponent != null)
+                {
+                    Debug.WriteLine($"Filter = {filter.Category} COMP = {otherComponent.Item.Name}");
+                    if (otherComponent.Item.Specs.ContainsKey(otherFieldName))
+                    {
+                        var vals = otherComponent.Item.Specs[otherFieldName].Split('\n');
+                        foreach(var val in vals)
+                        {
+                            filter.Value.Add(val);
+                        }
+                    }
+                }
+            }
+
             HandleQuery("");
         }
+
+        private static IEnumerable<T> FindChildren<T>(DependencyObject element)
+        {
+            var childCount = VisualTreeHelper.GetChildrenCount(element);
+            if(childCount == 0)
+            {
+                yield break;
+            }
+            for(int i = 0; i < childCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(element, i);
+                if(child is T cast)
+                {
+                    yield return cast;
+                }
+                else
+                {
+                    foreach(var c in FindChildren<T>(child))
+                    {
+                        yield return c;
+                    }
+                }
+            }
+        }
+
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -352,7 +434,14 @@ namespace MicroCBuilder.Views
             dataGrid.ItemsSource = new ObservableCollection<Item>(Results.Where(FilterPredicate));
         }
 
-        private Func<Item, bool> FilterPredicate => item => Filters.All(f => string.IsNullOrWhiteSpace(f.Value) || (item.Specs.ContainsKey(f.Category) && item.Specs[f.Category].Split('\n').Any(s => s == f.Value)));
+        private Func<Item, bool> FilterPredicate => item => Filters.All(filter => {
+            if(filter == null || filter.Value.Count(f => f != null) == 0)
+            {
+                return true;
+            }
+
+            return (item.Specs.ContainsKey(filter.Category) && item.Specs[filter.Category].Split('\n').Any(s => filter.Value.Contains(s)));
+        });
 
         private void FilterRemoveButtonClick(object sender, RoutedEventArgs e)
         {
@@ -361,22 +450,64 @@ namespace MicroCBuilder.Views
                 Filters.Remove(filter);
             }
         }
+
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            if(sender is CheckBox checkBox)
+            {
+                var parent = checkBox.FindAscendant<ListView>();
+                var val = checkBox.DataContext.ToString();
+                if (parent.DataContext is SearchFilter filter && !filter.Value.Contains(val))
+                {
+                    filter.Value.Add(val);
+                }
+            }
+        }
+
+        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox checkBox)
+            {
+                var parent = checkBox.FindAscendant<ListView>();
+                if (parent.DataContext is SearchFilter filter)
+                {
+                    filter.Value.Remove(checkBox.DataContext.ToString());
+                }
+            }
+        }
+
+        private void ListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if(sender is ListView listView && listView.DataContext is SearchFilter filter)
+            {
+                var cbs = FindChildren<CheckBox>(listView);
+                foreach(var cb in cbs)
+                {
+                    cb.IsChecked = filter.Value.Contains(cb.Content.ToString());
+                }
+            }
+        }
     }
 
     public class SearchFilter : INotifyPropertyChanged
     {
         private string category;
-        private string value;
-        private List<string> options;
+        private ObservableCollection<string> value = new ObservableCollection<string>();
+        private List<string> options = new List<string>();
 
         public SearchFilter(string category, string value)
         {
             Category = category;
-            Value = value;
+            if (value != null)
+            {
+                this.value = new ObservableCollection<string>() { value };
+            }
+
+            this.Value.CollectionChanged += (o, e) => OnPropertyChanged(nameof(Value));
         }
 
         public string Category { get => category; set => SetProperty(ref category, value); }
-        public string Value { get => value; set => SetProperty(ref this.value, value); }
+        public ObservableCollection<string> Value { get => value; }
         public List<string> Options { get => options; set => SetProperty(ref options, value); }
 
         private static string[] DEFAULT_FILTERS = new string[]
