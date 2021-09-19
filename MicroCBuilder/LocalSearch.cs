@@ -63,7 +63,7 @@ namespace MicroCBuilder
                     }.Sum();
 
                 //for debugging purposes
-                item.Stock = maxScore.ToString();
+                //item.Stock = maxScore.ToString();
 
                 if (IdFilterScores.ContainsKey(item.ID))
                 {
