@@ -103,7 +103,6 @@ namespace MicroCBuilder.Views
             DataContext = this;
             dataGrid.CanUserSortColumns = true;
             Filters.CollectionChanged += (sender, args) => UpdateFilter();
-            
             LocalSearch.Init();
         }
 
@@ -496,6 +495,16 @@ namespace MicroCBuilder.Views
                     cb.IsChecked = filter.Value.Contains(cb.Content.ToString());
                 }
             }
+        }
+
+        private void ResetFilter_Click(object sender, RoutedEventArgs e)
+        {
+            foreach(var filter in Filters)
+            {
+                filter.Value.Clear();
+            }
+            Update();
+            HandleQuery(Query);
         }
     }
 
