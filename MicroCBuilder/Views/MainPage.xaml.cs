@@ -51,6 +51,16 @@ namespace MicroCBuilder.Views
 
         private bool UpdateRunningLock = false;
 
+        private bool isLandingPage;
+        private bool isBuildPage;
+        private bool isSettingsPage;
+        private bool isChecklistPage;
+
+        public bool IsLandingPage { get => isLandingPage; set => SetProperty(ref isLandingPage, value); }
+        public bool IsBuildPage { get => isBuildPage; set => SetProperty(ref isBuildPage, value); }
+        public bool IsSettingsPage { get => isSettingsPage; set => SetProperty(ref isSettingsPage, value); }
+        public bool IsChecklistPage { get => isChecklistPage; set => SetProperty(ref isChecklistPage, value); }
+
         public MainPage()
         {
             Instance = this;
@@ -67,6 +77,37 @@ namespace MicroCBuilder.Views
             {
                 Tabs_AddTabButtonClick(null, null);
             }
+
+            Tabs.SelectionChanged += (sender, args) =>
+            {
+                switch (CurrentTabContent)
+                {
+                    case LandingPage:
+                        IsLandingPage = true;
+                        IsBuildPage = false;
+                        IsSettingsPage = false;
+                        IsChecklistPage = false;
+                        break;
+                    case BuildPage:
+                        IsLandingPage = false;
+                        IsBuildPage = true;
+                        IsSettingsPage = false;
+                        IsChecklistPage = false;
+                        break;
+                    case SettingsPage:
+                        IsLandingPage = false;
+                        IsBuildPage = false;
+                        IsSettingsPage = true;
+                        IsChecklistPage = false;
+                        break;
+                    case ChecklistPage:
+                        IsLandingPage = false;
+                        IsBuildPage = false;
+                        IsSettingsPage = false;
+                        IsChecklistPage = true;
+                        break;
+                }
+            };
 
             MicroCBuilder.ViewModels.SettingsPageViewModel.ForceUpdate += async () => await UpdateCache();
 
@@ -97,7 +138,7 @@ namespace MicroCBuilder.Views
 
         private void AddComponent(ComponentType type)
         {
-            if(CurrentTabContent is BuildPage page && page.DataContext is BuildPageViewModel vm)
+            if (CurrentTabContent is BuildPage page && page.DataContext is BuildPageViewModel vm)
             {
                 vm.Add.Execute(type);
             }
@@ -234,7 +275,7 @@ namespace MicroCBuilder.Views
         {
             get
             {
-                if(Tabs.SelectedItem is TabViewItem tabView && tabView.Content is Frame frame)
+                if (Tabs.SelectedItem is TabViewItem tabView && tabView.Content is Frame frame)
                 {
                     return frame.Content;
                 }
@@ -316,7 +357,7 @@ namespace MicroCBuilder.Views
 
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
             }
@@ -390,7 +431,7 @@ namespace MicroCBuilder.Views
 
         private void PrintBarcodesClicked(object sender, RoutedEventArgs e)
         {
-            if(CurrentTabContent is BuildPage page && page.DataContext is BuildPageViewModel vm)
+            if (CurrentTabContent is BuildPage page && page.DataContext is BuildPageViewModel vm)
             {
                 page.PrintBarcodesClicked();
             }
@@ -435,9 +476,10 @@ namespace MicroCBuilder.Views
         }
         #endregion
         Stopwatch sw = new Stopwatch();
+
         private async void Search_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if(e.Key == Windows.System.VirtualKey.Enter)
+            if (e.Key == Windows.System.VirtualKey.Enter)
             {
                 sw.Start();
                 if (CurrentTabContent is BuildPage page && page.DataContext is BuildPageViewModel vm)
@@ -452,7 +494,7 @@ namespace MicroCBuilder.Views
                     }
 
                     var match = Regex.Match(text, "^(\\d{6})(?:(?:.{4}$)|$)");
-                    if(match.Success)
+                    if (match.Success)
                     {
                         text = match.Groups[1].Value;
                         item = BuildComponentCache.Current.FindItemBySKU(text);

@@ -25,7 +25,7 @@
                     </Grid.ColumnDefinitions>
                     <Grid Grid.Column="0" MinWidth="50" x:Name="TabDragArea" Background="Transparent"/>
                     <Grid Grid.Column="2" x:Name="TabRightMargin"/>
-                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center">
+                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center" Visibility="{Binding IsBuildPage, Converter={StaticResource HideIfNull}}">
                         <CommandBar.SecondaryCommands>
                             <!--<AppBarButton Icon="Clear" Label="Reset" Click="ResetClicked"/>-->
                             <AppBarButton Icon="Share" Label="Export to Microcenter.com" Click="ExportClicked"/>
@@ -63,6 +63,14 @@
                             </AppBarButton.KeyboardAccelerators>
                         </AppBarButton>
 
+                    </CommandBar>
+                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center" Visibility="{Binding IsBuildPage, Converter={StaticResource ShowIfNull}}">
+                        <AppBarButton Icon="OpenFile" Label="Open" Click="LoadClicked">
+                            <AppBarButton.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="O" Modifiers="Control"/>
+                            </AppBarButton.KeyboardAccelerators>
+                        </AppBarButton>
+                        <AppBarButton Icon="Setting" Label="Settings" Click="SettingsClick"/>
                     </CommandBar>
                 </Grid>
             </controls:TabView.TabStripFooter>
