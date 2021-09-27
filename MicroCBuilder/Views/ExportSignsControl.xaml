@@ -17,6 +17,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBox Grid.Row="0" x:Name="TitleTextBox" PlaceholderText="Batch Name"/>
@@ -30,5 +31,6 @@
         <PasswordBox Grid.Row="3" x:Name="PasswordTextBox" PlaceholderText="Password"/>
         <TextBox Grid.Row="4" x:Name="BaseUrlTextBox" PlaceholderText="Base URL"/>
         <CheckBox Grid.Row="5" x:Name="SavePasswordCheckBox" HorizontalAlignment="Right" Content="Save Password"/>
+        <CheckBox Grid.Row="6" x:Name="UseQuantityCheckbox" HorizontalAlignment="Right" Content="Use Item Quantity"/>
     </Grid>
 </UserControl>

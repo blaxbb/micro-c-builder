@@ -724,39 +724,54 @@ namespace MicroCBuilder.ViewModels
 
             Settings.SignBaseUrl(signControl.BaseUrl);
 
-            var url = await SignPublisher.Publish(
+            try
+            {
+                var url = await SignPublisher.Publish(
                 skus: Components.Where(c => c.Item != null)
                     .SelectMany(c =>
                     {
                         var ret = new List<string>();
-                        for(int i = 0; i < c.Item.Quantity; i++)
+                        var qty = c.Item.Quantity;
+                        if (!signControl.UseQuantity)
+                        {
+                            qty = 1;
+                        }
+
+                        for (int i = 0; i < qty; i++)
                         {
                             ret.Add(c.Item.SKU);
                         }
                         return ret;
                     })
                     .ToList(),
-                baseUrl: signControl.BaseUrl,
-                signType: signControl.SignType,
-                username: signControl.Username,
-                password: signControl.Password,
-                batchName: signControl.Title
-            );
+                    baseUrl: signControl.BaseUrl,
+                    signType: signControl.SignType,
+                    username: signControl.Username,
+                    password: signControl.Password,
+                    batchName: signControl.Title
+                );
 
-            if (string.IsNullOrWhiteSpace(url))
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    Windows.UI.Popups.MessageDialog msg = new Windows.UI.Popups.MessageDialog("Failed to export signs!", "Error");
+                    await msg.ShowAsync();
+                }
+                else
+                {
+                    if (signControl.SavePassword)
+                    {
+                        Settings.SignUsername(signControl.Username);
+                        Settings.SignPassword(signControl.Password);
+                    }
+                    await Windows.System.Launcher.LaunchUriAsync(new Uri(url));
+                }
+            }
+            catch (Exception ex)
             {
-                Windows.UI.Popups.MessageDialog msg = new Windows.UI.Popups.MessageDialog("Failed to export signs!", "Error");
+                Windows.UI.Popups.MessageDialog msg = new Windows.UI.Popups.MessageDialog(ex.Message, "Error");
                 await msg.ShowAsync();
             }
-            else
-            {
-                if (signControl.SavePassword)
-                {
-                    Settings.SignUsername(signControl.Username);
-                    Settings.SignPassword(signControl.Password);
-                }
-                await Windows.System.Launcher.LaunchUriAsync(new Uri(url));
-            }
+            
         }
     }
 }

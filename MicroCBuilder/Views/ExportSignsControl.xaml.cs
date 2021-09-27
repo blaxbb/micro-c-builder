@@ -34,5 +34,6 @@ namespace MicroCBuilder.Views
         public string Password => PasswordTextBox.Password;
         public string BaseUrl => BaseUrlTextBox.Text;
         public bool SavePassword => SavePasswordCheckBox.IsChecked ?? false;
+        public bool UseQuantity => UseQuantityCheckbox.IsChecked ?? false;
     }
 }
