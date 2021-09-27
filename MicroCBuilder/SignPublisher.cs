@@ -193,7 +193,7 @@ namespace MicroCBuilder
                 var items = JsonConvert.DeserializeObject<List<FindItemResult>>(json);
                 if (items != null && items.Count > 0)
                 {
-                    return items;
+                    return skus.Select(sku => items.FirstOrDefault(i => i.itemID == sku)).ToList();
                 }
             }
 
@@ -208,7 +208,7 @@ namespace MicroCBuilder
             public string DefaultTemplate { get; set; }
             public string Filter { get; set; }
 
-            public AddItemsOptions(string username, string batchId, string defaultTemplate, List<FindItemResult> items)
+            public AddItemsOptions(string username, string batchId, string defaultTemplate, List<int> ids)
             {
                 Area = username;
                 BatchId = batchId;
@@ -216,22 +216,44 @@ namespace MicroCBuilder
                 Filter = $"(( areaType = 0 ) OR " +
                     $"( AreaType = 2 AND Area = 19 ) OR " +
                     $"( AreaType = 3 AND Area = {username} )) AND " +
-                    $"({string.Join(" OR ", items.Select(i => $"ID IN ('{i.libraryid}')"))})";
+                    $"({string.Join(" OR ", ids.Select(i => $"ID IN ('{i}')"))})";
             }
         }
 
-
         private static async Task AddItems(string baseUrl, List<FindItemResult> items, string signType, string username, string batchId)
         {
-            var opts = new AddItemsOptions(username, batchId, signType, items);
-            var json = JsonConvert.SerializeObject(opts);
-            var result = await client.TryPostAsync(
-                new Uri($"{baseUrl}/api/v2/SignItems/Create/all"),
-                new HttpStringContent(
-                    json,
-                    Windows.Storage.Streams.UnicodeEncoding.Utf8, "application/json"
-                )
-            );
+            async Task sendItems(List<int> ids) {
+                var opts = new AddItemsOptions(username, batchId, signType, ids);
+                var json = JsonConvert.SerializeObject(opts);
+                var result = await client.TryPostAsync(
+                    new Uri($"{baseUrl}/api/v2/SignItems/Create/all"),
+                    new HttpStringContent(
+                        json,
+                        Windows.Storage.Streams.UnicodeEncoding.Utf8, "application/json"
+                    )
+                );
+            }
+
+            List<int> ids = new List<int>();
+            for(int i = 0; i < items.Count; i++)
+            {
+                var id = items[i].libraryid;
+                if (ids.Contains(id))
+                {
+                    ids.Add(id);
+                }
+                else
+                {
+                    await sendItems(ids);
+                    ids.Clear();
+                    ids.Add(id);
+                }
+            }
+
+            if(ids.Count > 0)
+            {
+                await sendItems(ids);
+            }
 
             return;
         }

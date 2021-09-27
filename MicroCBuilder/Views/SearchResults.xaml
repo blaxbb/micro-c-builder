@@ -89,7 +89,7 @@
                     </toolkit:DataGridTemplateColumn.CellTemplate>
                 </toolkit:DataGridTemplateColumn>
                 <toolkit:DataGridTextColumn Header="Brand" Binding="{Binding Brand}"/>
-                <toolkit:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="400"/>
+                <toolkit:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1*"/>
                 <toolkit:DataGridTextColumn Header="Price" Binding="{Binding Price}"/>
                 <toolkit:DataGridTextColumn Header="Stock" Binding="{Binding Stock}"/>
                 <toolkit:DataGridTextColumn Header="SKU" Binding="{Binding SKU}"/>

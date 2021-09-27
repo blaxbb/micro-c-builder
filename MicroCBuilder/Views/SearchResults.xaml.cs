@@ -449,7 +449,7 @@ namespace MicroCBuilder.Views
                 return true;
             }
 
-            return (item.Specs.ContainsKey(filter.Category) && item.Specs[filter.Category].Split('\n').Any(s => filter.Value.Contains(s)));
+            return item.Specs.ContainsKey(filter.Category) && item.Specs[filter.Category].Split('\n').Any(s => filter.Value.Contains(s));
         });
 
         private void FilterRemoveButtonClick(object sender, RoutedEventArgs e)
