@@ -238,7 +238,7 @@ namespace MicroCBuilder
             for(int i = 0; i < items.Count; i++)
             {
                 var id = items[i].libraryid;
-                if (ids.Contains(id))
+                if (!ids.Contains(id))
                 {
                     ids.Add(id);
                 }

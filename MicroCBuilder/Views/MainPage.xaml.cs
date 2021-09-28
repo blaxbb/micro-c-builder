@@ -100,12 +100,12 @@ namespace MicroCBuilder.Views
                         IsSettingsPage = true;
                         IsChecklistPage = false;
                         break;
-                    case ChecklistPage:
-                        IsLandingPage = false;
-                        IsBuildPage = false;
-                        IsSettingsPage = false;
-                        IsChecklistPage = true;
-                        break;
+                    // case ChecklistPage:
+                    //     IsLandingPage = false;
+                    //     IsBuildPage = false;
+                    //     IsSettingsPage = false;
+                    //     IsChecklistPage = true;
+                    //     break;
                 }
             };
 
