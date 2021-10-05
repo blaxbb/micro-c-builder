@@ -16,9 +16,12 @@ namespace MicroCBuilder
         public const string TAXRATE_KEY = "taxrate";
         public const string LASTUPDATE_KEY = "lastupdate";
         public const string CATEGORIES_KEY = "categories";
+
         public const string SIGN_USERNAME_KEY = "sign_username";
         public const string SIGN_PASSWORD_KEY = "sign_password";
         public const string SIGN_BASEURL_KEY = "sign_baseurl";
+
+        public const string SHARED_PASSWORD_KEY = "sharedpassword";
 
 
         static ApplicationDataContainer localSettings => Windows.Storage.ApplicationData.Current.LocalSettings;
@@ -41,6 +44,7 @@ namespace MicroCBuilder
         public static string SignUsername() => Exists(SIGN_USERNAME_KEY) ? Value<string>(SIGN_USERNAME_KEY) : "";
         public static string SignPassword() => Exists(SIGN_PASSWORD_KEY) ? Value<string>(SIGN_PASSWORD_KEY) : "";
         public static string SignBaseUrl() => Exists(SIGN_BASEURL_KEY) ? Value<string>(SIGN_BASEURL_KEY) : "";
+        public static string SharedPassword() => Exists(SHARED_PASSWORD_KEY) ? Value<string>(SHARED_PASSWORD_KEY) : "";
 
 
         public static void Store(string store) => Set(STORE_KEY, store);
@@ -50,5 +54,6 @@ namespace MicroCBuilder
         public static void SignUsername(string username) => Set(SIGN_USERNAME_KEY, username);
         public static void SignPassword(string username) => Set(SIGN_PASSWORD_KEY, username);
         public static void SignBaseUrl(string username) => Set(SIGN_BASEURL_KEY, username);
+        public static void SharedPassword(string password) => Set(SHARED_PASSWORD_KEY, password);
     }
 }

@@ -31,6 +31,9 @@ namespace MicroCBuilder.Views
         public delegate void CreateBuildEventHandler(object sender, BuildInfo info);
         public event CreateBuildEventHandler OnCreateBuild;
 
+        public delegate void CreateChecklistEventHandler(object sender, EventArgs e);
+        public event CreateChecklistEventHandler OnCreateChecklist;
+
         string[] files = new string[]
         {
                 "TIER_5",
@@ -47,6 +50,7 @@ namespace MicroCBuilder.Views
             if (DataContext is LandingPageViewModel vm)
             {
                 vm.OnCreateBuild += CreateBuild;
+                vm.OnCreateChecklist += CreateChecklist;
                 TimeSpan period = TimeSpan.FromSeconds(30);
 
                 ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
@@ -93,6 +97,11 @@ namespace MicroCBuilder.Views
             }
         }
 
+        private void CreateChecklist(object sender, EventArgs e)
+        {
+            OnCreateChecklist?.Invoke(this, e);
+        }
+
         private void FlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             if(e.OriginalSource is FrameworkElement ele && ele.DataContext is FlareInfo info)
@@ -103,6 +112,11 @@ namespace MicroCBuilder.Views
                     Components = info.Components
                 });
             }
+        }
+
+        private void ChecklistFlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 

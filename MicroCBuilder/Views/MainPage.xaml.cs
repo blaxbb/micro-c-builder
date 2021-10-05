@@ -100,12 +100,12 @@ namespace MicroCBuilder.Views
                         IsSettingsPage = true;
                         IsChecklistPage = false;
                         break;
-                    // case ChecklistPage:
-                    //     IsLandingPage = false;
-                    //     IsBuildPage = false;
-                    //     IsSettingsPage = false;
-                    //     IsChecklistPage = true;
-                    //     break;
+                    case ChecklistPage:
+                        IsLandingPage = false;
+                        IsBuildPage = false;
+                        IsSettingsPage = false;
+                        IsChecklistPage = true;
+                        break;
                 }
             };
 
@@ -114,10 +114,20 @@ namespace MicroCBuilder.Views
             Settings.SettingsUpdated += (sender, args) => SetupAddButtons();
             SetupAddButtons();
 
+            Tabs.TabCloseRequested += Tabs_TabCloseRequested1;
+
             var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
             coreTitleBar.LayoutMetricsChanged += CoreTitleBar_LayoutMetricsChanged;
             Window.Current.SetTitleBar(TabDragArea);
+        }
+
+        private void Tabs_TabCloseRequested1(TabView sender, TabViewTabCloseRequestedEventArgs args)
+        {
+            if(Tabs.TabItems.Count == 0)
+            {
+                Tabs_AddTabButtonClick(null, null);
+            }
         }
 
         private void SetupAddButtons()
@@ -213,12 +223,12 @@ namespace MicroCBuilder.Views
             ProgressVisibility = Visibility.Visible;
             await action(progress)
                 .ContinueWith(async (_) =>
-            {
-                await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    ProgressVisibility = Visibility.Collapsed;
+                    await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        ProgressVisibility = Visibility.Collapsed;
+                    });
                 });
-            });
         }
 
         public async Task UpdateCache()
@@ -305,21 +315,36 @@ namespace MicroCBuilder.Views
 
         private void CreateBuild(BuildInfo info)
         {
+            if(info.Components == null)
+            {
+                return;
+            }
+
             if (Tabs.SelectedIndex >= 0 && Tabs.SelectedIndex < Tabs.TabItems.Count)
             {
                 Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
             }
-            var buildPage = PushTab<BuildPage>("Build");
+            var buildPage = PushTab<BuildPage>(info.Name ?? "Build");
             if (buildPage.DataContext is BuildPageViewModel vm)
             {
                 vm.InsertComponents(info.Components);
             }
         }
 
+        private void CreateChecklist()
+        {
+            if (Tabs.SelectedIndex >= 0 && Tabs.SelectedIndex < Tabs.TabItems.Count)
+            {
+                Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
+            }
+            var buildPage = PushTab<ChecklistPage>("Checklist");
+        }
+
         private void Tabs_AddTabButtonClick(Microsoft.UI.Xaml.Controls.TabView sender, object args)
         {
-            var page = PushTab<LandingPage>("New Build");
+            var page = PushTab<LandingPage>("Micro-C-Builder");
             page.OnCreateBuild += (sender, info) => CreateBuild(info);
+            page.OnCreateChecklist += (sender, args) => CreateChecklist();
         }
 
         private void Tabs_TabCloseRequested(Microsoft.UI.Xaml.Controls.TabView sender, Microsoft.UI.Xaml.Controls.TabViewTabCloseRequestedEventArgs args)
@@ -349,7 +374,7 @@ namespace MicroCBuilder.Views
                         Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
                     }
 
-                    var buildPage = PushTab<BuildPage>("Build");
+                    var buildPage = PushTab<BuildPage>(Path.GetFileNameWithoutExtension(file.Name) ?? "Build");
                     if (buildPage.DataContext is BuildPageViewModel vm)
                     {
                         vm.InsertComponents(components);
@@ -450,6 +475,14 @@ namespace MicroCBuilder.Views
             if (CurrentTabContent is BuildPage page && page.DataContext is BuildPageViewModel vm)
             {
                 vm.UpdatePricing.Execute(null);
+            }
+        }
+
+        private async void AddChecklistClicked(object sender, RoutedEventArgs e)
+        {
+            if(CurrentTabContent is ChecklistPage page && page.DataContext is ChecklistPageViewModel vm)
+            {
+                await vm.AddItem();
             }
         }
 

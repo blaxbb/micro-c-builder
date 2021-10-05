@@ -14,6 +14,8 @@
                     <converters:QuantityBackgroundConverter x:Key="QuantityBackground"/>
                     <converters:SplitStringConverter x:Key="SplitStringConverter"/>
                     <converters:StringCSVConverter x:Key="StringCSVConverter"/>
+                    <converters:FocusVisibilityConverter x:Key="ShowIfPasswordRevealed"/>
+                    <converters:FocusVisibilityConverter x:Key="HideIfPasswordRevealed" ShowWhenFocused="False"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

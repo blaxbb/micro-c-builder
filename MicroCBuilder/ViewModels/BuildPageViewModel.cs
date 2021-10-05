@@ -188,12 +188,22 @@ namespace MicroCBuilder.ViewModels
 
         private async void DoExportToWeb(object obj)
         {
+            var sharedPassword = Settings.SharedPassword();
+            var stack = new StackPanel() { Orientation = Orientation.Vertical };
+
             var tb = new TextBox() { PlaceholderText = "Title" };
+            var useEncryption = new CheckBox() { Content = "Use Encryption" };
+
+            stack.Children.Add(tb);
+            if(!string.IsNullOrWhiteSpace(sharedPassword))
+            {
+                stack.Children.Add(useEncryption);
+            }
 
             var dialog = new ContentDialog()
             {
                 Title = "Export to web",
-                Content = tb,
+                Content = stack,
                 PrimaryButtonText = "Export",
                 SecondaryButtonText = "Cancel"
             };
@@ -204,8 +214,19 @@ namespace MicroCBuilder.ViewModels
             {
                 return;
             }
-
-            var flare = new Flare(JsonConvert.SerializeObject(Components.Where(c => c.Item != null).ToList()));
+            Flare flare;
+            if(useEncryption.IsChecked ?? false && !string.IsNullOrWhiteSpace(sharedPassword))
+            {
+                flare = EncryptedFlare.Create(JsonConvert.SerializeObject(Components.Where(c => c.Item != null).ToList()), AesInfo.FromPassword(sharedPassword));
+            }
+            else
+            {
+                flare = new Flare(JsonConvert.SerializeObject(Components.Where(c => c.Item != null).ToList()));
+                if (!string.IsNullOrWhiteSpace(sharedPassword))
+                {
+                    flare.Sign(AesInfo.FromPassword(sharedPassword));
+                }
+            }
             flare.Tag = $"micro-c-{Settings.StoreID()}";
             flare.Title = tb.Text;
 
@@ -217,7 +238,7 @@ namespace MicroCBuilder.ViewModels
             }
 
             Flare = flare;
-            await Task.Delay(20 * 1000);
+            await Task.Delay(5 * 1000);
             Flare = null;
         }
 
@@ -243,9 +264,19 @@ namespace MicroCBuilder.ViewModels
 
             if (flare != null && flare.ShortCode.ToString() == shortCode)
             {
-                var json = flare.Data;
-                var imported = JsonConvert.DeserializeObject<List<BuildComponent>>(json);
-                if (imported.Count > 0)
+                var sharedPassword = Settings.SharedPassword();
+                List<BuildComponent> imported;
+                if (!string.IsNullOrWhiteSpace(sharedPassword))
+                {
+                    (imported, var encrypted) = flare.TryDecrypt<List<BuildComponent>>(AesInfo.FromPassword(sharedPassword));
+                }
+                else
+                {
+                    var json = flare.Data;
+                    imported = JsonConvert.DeserializeObject<List<BuildComponent>>(json);
+                }
+                
+                if (imported != null && imported.Count > 0)
                 {
                     DoReset(null);
                     foreach (var comp in imported)

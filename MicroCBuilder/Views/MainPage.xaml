@@ -64,12 +64,16 @@
                         </AppBarButton>
 
                     </CommandBar>
-                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center" Visibility="{Binding IsBuildPage, Converter={StaticResource ShowIfNull}}">
+                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center" Visibility="{Binding IsLandingPage, Converter={StaticResource HideIfNull}}">
                         <AppBarButton Icon="OpenFile" Label="Open" Click="LoadClicked">
                             <AppBarButton.KeyboardAccelerators>
                                 <KeyboardAccelerator Key="O" Modifiers="Control"/>
                             </AppBarButton.KeyboardAccelerators>
                         </AppBarButton>
+                        <AppBarButton Icon="Setting" Label="Settings" Click="SettingsClick"/>
+                    </CommandBar>
+                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center" Visibility="{Binding IsChecklistPage, Converter={StaticResource HideIfNull}}">
+                        <AppBarButton Icon="Add" Label="Add Item" Click="AddChecklistClicked"/>
                         <AppBarButton Icon="Setting" Label="Settings" Click="SettingsClick"/>
                     </CommandBar>
                 </Grid>

@@ -16,8 +16,15 @@ namespace MicroCBuilder.ViewModels
         public delegate void CreateBuildEventHandler(object sender, BuildInfo name);
         public event CreateBuildEventHandler OnCreateBuild;
 
+        public delegate void CreateChecklistEventHandler(object sender, EventArgs e);
+        public event CreateChecklistEventHandler OnCreateChecklist;
+
         public ObservableCollection<FlareInfo> Flares { get; set; }
         public Command UpdateNetworkFlares { get; }
+
+        public ObservableCollection<Flare> ChecklistItems { get; set; }
+        public Command UpdateNetworkChecklistFlares { get; }
+        public Command NewChecklistCommand { get; }
 
         public LandingPageViewModel()
         {
@@ -28,12 +35,40 @@ namespace MicroCBuilder.ViewModels
 
             UpdateNetworkFlares = new Command(async (o) =>
             {
-                var flares = (await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-{Settings.StoreID()}"));
+                var sharedPassword = Settings.SharedPassword();
+                AesInfo? aesInfo = null;
+                if (!string.IsNullOrWhiteSpace(sharedPassword))
+                {
+                    aesInfo = AesInfo.FromPassword(sharedPassword);
+                }
 
+                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-{Settings.StoreID()}");
                 var toAdd = flares.Where(f => Flares.All(existing => existing.Flare.ShortCode != f.ShortCode)).OrderBy(f => f.Created).ToList();
                 foreach(var f in toAdd)
                 {
-                    Flares.Insert(0, new FlareInfo(f));
+                    if (aesInfo == null)
+                    {
+                        var (data, encrypted) = f.TryDecrypt<List<BuildComponent>>(aesInfo);
+                        if (data != null)
+                        {
+                            Flares.Insert(0, new FlareInfo(f));
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var data = f.Value(typeof(List<BuildComponent>));
+                            if (data != null)
+                            {
+                                Flares.Insert(0, new FlareInfo(f));
+                            }
+                        }
+                        catch(Exception ex)
+                        {
+                            //flare is likely encrypted (or possibly malformed)
+                        }
+                    }
                 }
 
                 var toRemove = Flares.Where(f => flares.All(updated => updated.ShortCode != f.Flare.ShortCode)).ToList();
@@ -53,6 +88,31 @@ namespace MicroCBuilder.ViewModels
             });
             UpdateNetworkFlares.Execute(null);
 
+            UpdateNetworkChecklistFlares = new Command(async (o) =>
+            {
+                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklists-{Settings.StoreID()}");
+                var latestItems = flares.GroupBy(f => f.Title).SelectMany(g => g).OrderByDescending(f => f.Created).ToList();
+
+                var toRemove = ChecklistItems.Where(f => !latestItems.Any(g => f.Tag == g.Tag));
+                foreach(var f in toRemove)
+                {
+                    ChecklistItems.Remove(f);
+                }
+
+                foreach(var newFlare in latestItems)
+                {
+                    if(!ChecklistItems.Any(c => c.Tag == newFlare.Tag))
+                    {
+                        ChecklistItems.Add(newFlare);
+                    }
+                }
+            });
+
+            NewChecklistCommand = new Command((o) =>
+            {
+                OnCreateChecklist?.Invoke(this, new EventArgs());
+            });
+
         }
 
 
@@ -71,12 +131,23 @@ namespace MicroCBuilder.ViewModels
     public class FlareInfo
     {
         public Flare Flare { get; set; }
-        public List<BuildComponent> Components => (List<BuildComponent>)Flare.Value(typeof(List<BuildComponent>));
-        public float Total => Components.Sum(c => c?.Item.Price ?? 0 * c?.Item.Quantity ?? 0);
+        public List<BuildComponent> Components { get; }
+        public float Total => Components?.Sum(c => c?.Item.Price ?? 0 * c?.Item.Quantity ?? 0) ?? 0f;
+        public bool IsEncrypted { get; }
 
         public FlareInfo(Flare flare)
         {
             Flare = flare;
+            var password = Settings.SharedPassword();
+            if(string.IsNullOrWhiteSpace(password))
+            {
+                Components = (List<BuildComponent>)flare.Value(typeof(List<BuildComponent>));
+                IsEncrypted = false;
+            }
+            else
+            {
+                (Components, IsEncrypted) = Flare.TryDecrypt<List<BuildComponent>>(AesInfo.FromPassword(password));
+            }
         }
     }
 }

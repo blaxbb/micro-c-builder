@@ -14,12 +14,16 @@
     <Page.DataContext>
         <vm:LandingPageViewModel/>
     </Page.DataContext>
-    <Grid>
+    <Grid Margin="20" ColumnSpacing="10" RowSpacing="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Grid ColumnSpacing="10" RowSpacing="10" Margin="20" Grid.Column="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="10" RowSpacing="10" Grid.Column="0" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="3*"/>
@@ -85,10 +89,9 @@
 
             <!--#endregion-->
         </Grid>
-        <Grid Grid.Column="1" Margin="0,20,0,20">
+        <Grid Grid.Column="1" Grid.Row="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -115,8 +118,9 @@
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:FlareInfo">
-                        <Grid Height="75">
+                        <Grid Height="75" Margin="20,0,20,0">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="5*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="2*"/>
@@ -125,11 +129,70 @@
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Column="0" Grid.RowSpan="2" Text="{Binding Flare.Title}" FontSize="24" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Components.Count}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Total, Converter={StaticResource MoneyFormat}}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Text="{Binding Flare.Created}" TextAlignment="Right" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding Flare.ShortCode}" TextAlignment="Right" VerticalAlignment="Center"/>
+                            <FontIcon Grid.Column="0" Grid.RowSpan="2" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" Margin="0,0,5,0" Visibility="{Binding IsEncrypted, Converter={StaticResource HideIfNull}}"/>
+                            <FontIcon Grid.Column="0" Grid.RowSpan="2" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Glyph="&#xE785;" Margin="0,0,5,0" Visibility="{Binding IsEncrypted, Converter={StaticResource ShowIfNull}}"/>
+                            <TextBlock Grid.Column="1" Grid.RowSpan="2" Text="{Binding Flare.Title}" FontSize="24" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Components.Count}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding Total, Converter={StaticResource MoneyFormat}}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="{Binding Flare.Created}" TextAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Grid.Row="1" Text="{Binding Flare.ShortCode}" TextAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!--#endregion-->
+
+        </Grid>
+        <Grid Grid.Column="1" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <!--#region rightColumn-->
+            <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Checklists" VerticalAlignment="Center" FontSize="24" Margin="10,0,0,0"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Grid.Row="0" Grid.Column="1" Spacing="10">
+                <Button Style="{ThemeResource ButtonRevealStyle}" Command="{Binding UpdateNetworkFlares}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="Refresh" Padding="0,0,10,0"/>
+                        <SymbolIcon Symbol="Refresh"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{ThemeResource ButtonRevealStyle}" Command="{Binding NewChecklistCommand}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="New" Padding="0,0,10,0"/>
+                        <SymbolIcon Symbol="Add"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource SystemControlBackgroundBaseLowRevealBorderBrush}"/>
+
+            <ListView Grid.Row="1" Grid.ColumnSpan="2" ItemsSource="{Binding ChecklistItems}" DoubleTapped="ChecklistFlareDoubleTapped">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                        <Setter Property="VerticalContentAlignment" Value="Stretch"></Setter>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="dataflare:Flare">
+                        <Grid Height="75">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="24" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Created}" TextAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{Binding ShortCode}" TextAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

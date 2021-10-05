@@ -23,6 +23,8 @@ namespace MicroCBuilder.ViewModels
         public double TaxRate { get => taxRate; set { SetProperty(ref taxRate, value); Settings.TaxRate(value); } }
         public TimeSpan LastUpdated { get => lastUpdated; set => SetProperty(ref lastUpdated, value); }
 
+        public string SharedPassword { get => sharedPassword; set { SetProperty(ref sharedPassword, value); Settings.SharedPassword(value); } }
+
         public ObservableCollection<ComponentType> Categories { get; set; }
         public ObservableCollection<ComponentType> HiddenCategories { get; set; }
         public ObservableCollection<string> PresetNames { get; set; }
@@ -38,6 +40,7 @@ namespace MicroCBuilder.ViewModels
         private TimeSpan lastUpdated;
         private int newCategoryIndex;
         private int selectedPresetIndex;
+        private string sharedPassword;
 
         public delegate void ForceUpdateEvent();
         public static event ForceUpdateEvent ForceUpdate;
@@ -70,6 +73,8 @@ namespace MicroCBuilder.ViewModels
 
             var updateTime = Settings.LastUpdated();
             LastUpdated = DateTime.Now - updateTime;
+
+            SharedPassword = Settings.SharedPassword();
 
             ForceUpdateCommand = new Command((_) =>
             {
@@ -118,7 +123,7 @@ namespace MicroCBuilder.ViewModels
             if (SelectedPresetIndex > 0 && SelectedPresetIndex < PresetNames.Count)
             {
                 var preset = PresetNames[SelectedPresetIndex];
-                if(preset == null)
+                if (preset == null)
                 {
                     return;
                 }
