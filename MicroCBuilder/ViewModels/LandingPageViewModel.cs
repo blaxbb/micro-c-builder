@@ -46,7 +46,7 @@ namespace MicroCBuilder.ViewModels
                 var toAdd = flares.Where(f => Flares.All(existing => existing.Flare.ShortCode != f.ShortCode)).OrderBy(f => f.Created).ToList();
                 foreach(var f in toAdd)
                 {
-                    if (aesInfo == null)
+                    if (aesInfo != null)
                     {
                         var (data, encrypted) = f.TryDecrypt<List<BuildComponent>>(aesInfo);
                         if (data != null)
