@@ -465,7 +465,7 @@ namespace MicroCBuilder.Views
             if(sender is CheckBox checkBox)
             {
                 var parent = checkBox.FindAscendant<ListView>();
-                var val = checkBox.DataContext.ToString();
+                var val = checkBox.DataContext?.ToString() ?? "";
                 if (parent.DataContext is SearchFilter filter && !filter.Value.Contains(val))
                 {
                     filter.Value.Add(val);
@@ -480,7 +480,7 @@ namespace MicroCBuilder.Views
                 var parent = checkBox.FindAscendant<ListView>();
                 if (parent.DataContext is SearchFilter filter)
                 {
-                    filter.Value.Remove(checkBox.DataContext.ToString());
+                    filter.Value.Remove(checkBox.DataContext?.ToString() ?? "");
                 }
             }
         }
@@ -492,7 +492,7 @@ namespace MicroCBuilder.Views
                 var cbs = FindChildren<CheckBox>(listView);
                 foreach(var cb in cbs)
                 {
-                    cb.IsChecked = filter.Value.Contains(cb.Content.ToString());
+                    cb.IsChecked = filter.Value.Contains(cb.Content?.ToString() ?? "");
                 }
             }
         }
