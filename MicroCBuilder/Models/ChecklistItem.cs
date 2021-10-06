@@ -15,10 +15,15 @@ namespace MicroCBuilder.Models
         private bool complete;
         private DateTime completeDate;
 
+        public Guid Id { get; set; }
         public string Name { get => name; set => SetProperty(ref name, value); }
         public string Assigned { get => assigned; set => SetProperty(ref assigned, value); }
         public bool Complete { get => complete; set => SetProperty(ref complete, value); }
         public DateTime CompleteDate { get => completeDate; set => SetProperty(ref completeDate, value); }
+        public ChecklistItem()
+        {
+            Id = Guid.NewGuid();
+        }
 
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;

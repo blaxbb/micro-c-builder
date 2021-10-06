@@ -268,7 +268,8 @@ namespace MicroCBuilder.ViewModels
                 List<BuildComponent> imported;
                 if (!string.IsNullOrWhiteSpace(sharedPassword))
                 {
-                    (imported, var encrypted) = flare.TryDecrypt<List<BuildComponent>>(AesInfo.FromPassword(sharedPassword));
+                    (var imp, var encrypted) = flare.TryDecrypt<List<BuildComponent>>(AesInfo.FromPassword(sharedPassword));
+                    imported = imp;
                 }
                 else
                 {

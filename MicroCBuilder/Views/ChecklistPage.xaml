@@ -11,34 +11,77 @@
     <Page.DataContext>
         <viewmodels:ChecklistPageViewModel/>
     </Page.DataContext>
-    <ListView ItemsSource="{Binding Items}" Padding="15" CanReorderItems="True" AllowDrop="True" SelectionMode="None" IsTabStop="False" TabFocusNavigation="Local">
-        <ListView.ItemContainerStyle>
-            <Style TargetType="ListViewItem">
-                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                <Setter Property="IsTabStop" Value="False"/>
-            </Style>
-        </ListView.ItemContainerStyle>
-        <ListView.ItemTemplate>
-            <DataTemplate>
-                <Grid x:Name="grid">
-                    <Grid.ContextFlyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem Text="Edit" Icon="Edit" Command="{Binding DataContext.EditItemCommand, ElementName=page}" CommandParameter="{Binding }"/>
-                        </MenuFlyout>
-                    </Grid.ContextFlyout>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <CheckBox Grid.Column="0" MinWidth="0" IsChecked="{Binding Complete}" IsTabStop="False"/>
-                    <TextBlock Grid.Column="1" Text="{Binding Name}"/>
-                    <TextBox Grid.Column="2" Text="{Binding Assigned}" TabIndex="2"/>
-                    <TextBlock Grid.Column="3" Text="{Binding Name}"/>
-                    
-                </Grid>
-            </DataTemplate>
-        </ListView.ItemTemplate>
-    </ListView>
+    <Grid ColumnSpacing="10" Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" BorderBrush="{StaticResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="1">
+            <ListView SelectionMode="Single">
+                <ListView.Items>
+                    <x:String>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</x:String>
+                    <x:String>BBB</x:String>
+                    <x:String>CCC</x:String>
+                </ListView.Items>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <ProgressBar Grid.Row="0" Grid.ColumnSpan="2" Value="30" VerticalAlignment="Stretch" ></ProgressBar>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding }" FontSize="24" Margin="20,5,0,5" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" FontSize="24" Margin="0,5,20,5">
+                                <Span>3</Span>
+                                <Span>/</Span>
+                                <Span>10</Span>
+                            </TextBlock>
+
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Border>
+        <Border Grid.Column="1" BorderBrush="{StaticResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="1" Padding="20">
+            <Grid RowSpacing="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Checklist Title" FontSize="36"/>
+                <ListView Grid.Row="1" ItemsSource="{Binding Items}" CanReorderItems="True" AllowDrop="True" SelectionMode="None" IsTabStop="False" TabFocusNavigation="Local">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="IsTabStop" Value="False"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid x:Name="grid" Padding="10">
+                                <Grid.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Edit" Icon="Edit" Command="{Binding DataContext.EditItemCommand, ElementName=page}" CommandParameter="{Binding }"/>
+                                    </MenuFlyout>
+                                </Grid.ContextFlyout>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0" MinWidth="0" IsChecked="{Binding Complete, Mode=TwoWay}" IsTabStop="False"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="2" Text="{Binding Assigned, Mode=TwoWay}" KeyDown="AssignedTextBox_KeyDown" PlaceholderText="No assignment" TabIndex="2"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+    </Grid>
 </Page>

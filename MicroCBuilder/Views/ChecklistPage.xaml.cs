@@ -1,10 +1,13 @@
-﻿using System;
+﻿using MicroCBuilder.Models;
+using MicroCBuilder.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -25,6 +28,26 @@ namespace MicroCBuilder.Views
         public ChecklistPage()
         {
             this.InitializeComponent();
+        }
+
+        private void AssignedTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                if (sender is TextBox textBox && textBox.DataContext is ChecklistItem item && DataContext is ChecklistPageViewModel vm && textBox.Parent is Grid grid)
+                {
+                    item.Assigned = textBox.Text;
+                    grid.Background = new SolidColorBrush(Colors.Transparent);
+                    vm.ItemAssignedChanged(item);
+                }
+            }
+            else
+            {
+                if (sender is TextBox textBox && textBox.Parent is Grid grid)
+                {
+                    grid.Background = new SolidColorBrush(Color.FromArgb(50,255,0,0));
+                }
+            }
         }
     }
 }

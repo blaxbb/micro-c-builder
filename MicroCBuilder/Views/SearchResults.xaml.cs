@@ -631,11 +631,17 @@ namespace MicroCBuilder.Views
             "Radiator Size",
         };
 
+        private static string[] BUILDSERVICE_FILTERS = new string[]
+        {
+            "Subcategory:"
+        };
+
         public static bool DefaultEnabled(ComponentType componentType, string specCategory)
         {
             string[] items = null;
             items = componentType switch
             {
+                ComponentType.BuildService => BUILDSERVICE_FILTERS,
                 ComponentType.CPU => CPU_FILTERS,
                 ComponentType.Motherboard => MOBO_FILTERS,
                 ComponentType.RAM => RAM_FILTERS,

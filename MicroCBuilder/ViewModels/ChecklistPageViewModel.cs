@@ -15,24 +15,29 @@ namespace MicroCBuilder.ViewModels
     {
         public ObservableCollection<ChecklistItem> Items { get; set; }
         public Command<ChecklistItem> EditItemCommand { get; }
+        public ObservableCollection<string> Changes { get; }
+
+        Dictionary<string, DateTime> AssignedUpdatedTimes { get; }
 
         public ChecklistPageViewModel()
         {
             Items = new ObservableCollection<ChecklistItem>();
+            Changes = new ObservableCollection<string>();
+            AssignedUpdatedTimes = new Dictionary<string, DateTime>();
 
             Items.CollectionChanged += Items_CollectionChanged;
 
-            Items.Add(new ChecklistItem()
+            AddItem(new ChecklistItem()
             {   
                 Name = "Task 1",
             });
 
-            Items.Add(new ChecklistItem()
+            AddItem(new ChecklistItem()
             {
                 Name = "Task 2",
             });
 
-            Items.Add(new ChecklistItem()
+            AddItem(new ChecklistItem()
             {
                 Name = "Task 3",
             });
@@ -41,6 +46,36 @@ namespace MicroCBuilder.ViewModels
             {
                 item = await ShowEditItemDialog(item);
             });
+        }
+
+        void AddItem(ChecklistItem item)
+        {
+            item.PropertyChanged += Item_PropertyChanged;
+            Items.Add(item);
+        }
+
+        public void ItemAssignedChanged(ChecklistItem item)
+        {
+            Changes.Add($"CHANGED {item.Name} ASSIGNED TO {item.Assigned}");
+            Debug.WriteLine(Changes.Last());
+        }
+
+        private async void Item_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (sender is ChecklistItem item)
+            {
+                switch (e.PropertyName)
+                {
+                    case nameof(ChecklistItem.Name):
+
+                        break;
+                    case nameof(ChecklistItem.Complete):
+                        Changes.Add($"CHANGED {item.Name} COMPLETE TO {(item.Complete ? "YES" : "NO")}");
+                        Debug.WriteLine(Changes.Last());
+
+                        break;
+                }
+            }
         }
 
         private void Items_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -86,7 +121,7 @@ namespace MicroCBuilder.ViewModels
             var newItem = await ShowEditItemDialog();
             if (newItem != null)
             {
-                Items.Add(newItem);
+                AddItem(newItem);
             }
         }
     }
