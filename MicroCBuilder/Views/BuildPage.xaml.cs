@@ -114,19 +114,19 @@ namespace MicroCBuilder.Views
             var doExport = cb.IsChecked;
             if (result != ContentDialogResult.Secondary)
             {
-                await DoPrint(name, doExport.HasValue ? doExport.Value : false);
+                await DoPrintQuote(vm.Components.ToList(), name, doExport ?? false);
             }
         }
-        private async Task DoPrint(string salesID = "", bool exportToMCOL = false)
-        { 
 
-            var itemsCount = vm.Components.Count(c => c.Item != null);
+        public static async Task DoPrintQuote(List<BuildComponent> Components, string salesID = "", bool exportToMCOL = false)
+        {
+            var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
             {
                 return;
             }
 
-            _printHelper = new PrintHelper(Container);
+            MainPage.PrintHelper_Initialize();
 
             const int ITEMS_PER_PAGE = 12;
             
@@ -159,12 +159,14 @@ namespace MicroCBuilder.Views
                 var buildContext = new MCOLBuildContext();
                 if (exportToMCOL)
                 {
-                    await buildContext.AddComponents(vm.Components.ToList());
+                    await buildContext.AddComponents(Components);
                 }
+
+                float SubTotal = Components.Where(c => c?.Item != null).Sum(c => c.Item.Price * c.Item.Quantity);
 
                 var footer = new BuildSummaryControl
                 {
-                    SubTotal = vm.SubTotal,
+                    SubTotal = SubTotal,
                     MCOLUrl = buildContext.TinyBuildURL
                 };
 
@@ -179,7 +181,7 @@ namespace MicroCBuilder.Views
                 page.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
 
                 var contents = new Grid();
-                var comps = vm.Components.Where(c => c.Item != null).Skip(i).Take(ITEMS_PER_PAGE).ToList();
+                var comps = Components.Where(c => c.Item != null).Skip(i).Take(ITEMS_PER_PAGE).ToList();
                 for (int j = 0; j < comps.Count; j++)
                 {
                     var comp = comps[j];
@@ -192,8 +194,8 @@ namespace MicroCBuilder.Views
                     BuildComponent plan1, plan2;
                     if(comp.Type == BuildComponent.ComponentType.BuildService)
                     {
-                        plan1 = PrintView.GetBuildPlan(3, vm.Components);
-                        plan2 = PrintView.GetBuildPlan(2, vm.Components);
+                        plan1 = PrintView.GetBuildPlan(3, Components);
+                        plan2 = PrintView.GetBuildPlan(2, Components);
                     }
                     else
                     {
@@ -242,19 +244,15 @@ namespace MicroCBuilder.Views
                 Grid.SetRow(border2, 1);
 
                 //add full grid as new page
-                _printHelper.AddFrameworkElementToPrint(page);
+                MainPage.PrintHelper.AddFrameworkElementToPrint(page);
             }
-
-            _printHelper.OnPrintCanceled += PrintHelper_OnPrintCanceled;
-            _printHelper.OnPrintFailed += PrintHelper_OnPrintFailed;
-            _printHelper.OnPrintSucceeded += PrintHelper_OnPrintSucceeded;
 
             var printHelperOptions = new PrintHelperOptions(true)
             {
                 Orientation = Windows.Graphics.Printing.PrintOrientation.Portrait
             };
 
-            await _printHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
+            await MainPage.PrintHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
         }
 
         public async Task PrintBarcodesClicked()
@@ -374,19 +372,19 @@ namespace MicroCBuilder.Views
                     entries.Add(entry);
                 }
 
-                await DoPrintBarcodes(entries);
+                await DoPrintBarcodes(vm.Components.ToList(), entries);
             }
         }
 
-        public async Task DoPrintBarcodes(List<(BuildComponent comp, int index)> serials)
+        public static async Task DoPrintBarcodes(List<BuildComponent> Components, List<(BuildComponent comp, int index)> serials)
         {
-            var itemsCount = vm.Components.Count(c => c.Item != null);
+            var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
             {
                 return;
             }
 
-            _printHelper = new PrintHelper(Container);
+            MainPage.PrintHelper_Initialize();
 
             const int BARCODE_ITEMS_PER_PAGE = 9;
 
@@ -411,9 +409,11 @@ namespace MicroCBuilder.Views
                 };
                 header.Text = $"Order created on {DateTime.Now:yyyy-MM-dd}.";
 
+                float SubTotal = Components.Where(c => c?.Item != null).Sum(c => c.Item.Price * c.Item.Quantity);
+
                 var footer = new BuildSummaryControl
                 {
-                    SubTotal = vm.SubTotal
+                    SubTotal = SubTotal
                 };
 
                 page.Children.Add(header);
@@ -466,19 +466,15 @@ namespace MicroCBuilder.Views
                 Grid.SetRow(border2, 1);
 
                 //add full grid as new page
-                _printHelper.AddFrameworkElementToPrint(page);
+                MainPage.PrintHelper.AddFrameworkElementToPrint(page);
             }
-
-            _printHelper.OnPrintCanceled += PrintHelper_OnPrintCanceled;
-            _printHelper.OnPrintFailed += PrintHelper_OnPrintFailed;
-            _printHelper.OnPrintSucceeded += PrintHelper_OnPrintSucceeded;
 
             var printHelperOptions = new PrintHelperOptions(true)
             {
                 Orientation = Windows.Graphics.Printing.PrintOrientation.Portrait
             };
 
-            await _printHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
+            await MainPage.PrintHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
         }
 
         public async Task PromoPrintClicked()
@@ -503,19 +499,19 @@ namespace MicroCBuilder.Views
             var doSplit = cb.IsChecked ?? false;
             if (result != ContentDialogResult.Secondary)
             {
-                await DoPrintPromo(doSplit);
+                await DoPrintPromo(vm.Components.ToList(), doSplit);
             }
         }
 
-        private async Task DoPrintPromo(bool IsSplit)
+        public static async Task DoPrintPromo(List<BuildComponent> Components, bool IsSplit)
         {
-            var itemsCount = vm.Components.Count(c => c.Item != null);
+            var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
             {
                 return;
             }
 
-            _printHelper = new PrintHelper(Container);
+            MainPage.PrintHelper_Initialize();
 
             Grid page = new Grid
             {
@@ -574,11 +570,11 @@ namespace MicroCBuilder.Views
             double fontSize = 32;
             var promoItems = new List<TextBlock>();
 
-            var cpu = vm.Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.CPU);
-            var gpu = vm.Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.GPU);
-            var ram = vm.Components.Where(c => c.Item != null && c.Type == BuildComponent.ComponentType.RAM);
-            var ssds = vm.Components.Where(c => c.Item != null && c.Type == BuildComponent.ComponentType.SSD);
-            var _case = vm.Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.Case);
+            var cpu = Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.CPU);
+            var gpu = Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.GPU);
+            var ram = Components.Where(c => c.Item != null && c.Type == BuildComponent.ComponentType.RAM);
+            var ssds = Components.Where(c => c.Item != null && c.Type == BuildComponent.ComponentType.SSD);
+            var _case = Components.FirstOrDefault(c => c.Item != null && c.Type == BuildComponent.ComponentType.Case);
 
             if (cpu?.Item != null && cpu.Item.Specs.ContainsKey("Processor"))
             {
@@ -640,10 +636,13 @@ namespace MicroCBuilder.Views
             priceGrid.Margin = new Thickness(0);
             priceGrid.Padding = new Thickness(0);
 
-            var plan = GetBuildPlan(vm.Components);
+            var plan = GetBuildPlan(Components);
+
+            float SubTotal = Components.Where(c => c?.Item != null).Sum(c => c.Item.Price * c.Item.Quantity);
+
             var priceStrings = new List<string>()
             {
-                $"${vm.SubTotal:.00}",
+                $"${SubTotal:.00}",
             };
             if (plan != default)
             {
@@ -720,7 +719,7 @@ namespace MicroCBuilder.Views
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
-            foreach (var comp in vm.Components.Where(c => c.Item != null))
+            foreach (var comp in Components.Where(c => c.Item != null))
             {
                 var item = comp.Item;
 
@@ -752,9 +751,9 @@ namespace MicroCBuilder.Views
             var footerItems = new (string name, string value)[]
             {
                 (" "," "),
-                ("Subtotal", $"${vm.SubTotal:.00}"),
-                ("Tax", $"${(tax * vm.SubTotal):.00}"),
-                ("Total", $"${((1 + tax) * vm.SubTotal):.00}"),
+                ("Subtotal", $"${SubTotal:.00}"),
+                ("Tax", $"${(tax * SubTotal):.00}"),
+                ("Total", $"${((1 + tax) * SubTotal):.00}"),
             };
 
             foreach(var item in footerItems)
@@ -788,19 +787,14 @@ namespace MicroCBuilder.Views
                 page.Children.Add(border);
             }
 
-            _printHelper.AddFrameworkElementToPrint(page);
-
-
-            _printHelper.OnPrintCanceled += PrintHelper_OnPrintCanceled;
-            _printHelper.OnPrintFailed += PrintHelper_OnPrintFailed;
-            _printHelper.OnPrintSucceeded += PrintHelper_OnPrintSucceeded;
+            MainPage.PrintHelper.AddFrameworkElementToPrint(page);
 
             var printHelperOptions = new PrintHelperOptions(true)
             {
                 Orientation = Windows.Graphics.Printing.PrintOrientation.Portrait
             };
 
-            await _printHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
+            await MainPage.PrintHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
         }
 
         private void PrintHelper_OnPrintSucceeded()

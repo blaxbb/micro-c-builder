@@ -8,8 +8,10 @@
     xmlns:views="using:MicroCBuilder.Views"
     xmlns:vm="using:MicroCBuilder.ViewModels"
     xmlns:dataflare="using:DataFlareClient"
+    xmlns:models="using:MicroCBuilder.Models"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    x:Name="page">
 
     <Page.DataContext>
         <vm:LandingPageViewModel/>
@@ -119,6 +121,12 @@
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:FlareInfo">
                         <Grid Height="75" Margin="20,0,20,0">
+                            <Grid.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Print" Command="{Binding DataContext.PrintBuildCommand, ElementName=page}" CommandParameter="{Binding Components}"/>
+                                    <MenuFlyoutItem Text="Output Sign Batch" Command="{Binding DataContext.OutputSignsCommand, ElementName=page}" CommandParameter="{Binding Components}"/>
+                                </MenuFlyout>
+                            </Grid.ContextFlyout>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="5*"/>
@@ -157,7 +165,7 @@
             <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Checklists" VerticalAlignment="Center" FontSize="24" Margin="10,0,0,0"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Grid.Row="0" Grid.Column="1" Spacing="10">
-                <Button Style="{ThemeResource ButtonRevealStyle}" Command="{Binding UpdateNetworkFlares}">
+                <Button Style="{ThemeResource ButtonRevealStyle}" Command="{Binding UpdateNetworkChecklistFlares}">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <TextBlock Text="Refresh" Padding="0,0,10,0"/>
                         <SymbolIcon Symbol="Refresh"/>
@@ -180,7 +188,7 @@
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="dataflare:Flare">
+                    <DataTemplate x:DataType="models:Checklist">
                         <Grid Height="75">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -190,9 +198,9 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="24" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Created}" TextAlignment="Right" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Text="{Binding ShortCode}" TextAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="24" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="AAA" TextAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="BBB" TextAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

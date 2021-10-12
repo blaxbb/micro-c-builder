@@ -1,5 +1,7 @@
-﻿using MicroCBuilder.Models;
+﻿using DataFlareClient;
+using MicroCBuilder.Models;
 using MicroCBuilder.Views;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,34 +15,64 @@ namespace MicroCBuilder.ViewModels
 {
     public class ChecklistPageViewModel : BaseViewModel
     {
-        public ObservableCollection<ChecklistItem> Items { get; set; }
+        private Checklist checklist;
+
+        public Checklist Checklist { get => checklist; set { SetProperty(ref checklist, value); checklist.Items.ToList().ForEach(c => c.PropertyChanged += Item_PropertyChanged); } }
         public Command<ChecklistItem> EditItemCommand { get; }
         public ObservableCollection<string> Changes { get; }
+        public ObservableCollection<Checklist> Checklists { get; }
+        public Command UpdateNetworkChecklistFlares { get; }
 
         Dictionary<string, DateTime> AssignedUpdatedTimes { get; }
 
         public ChecklistPageViewModel()
         {
-            Items = new ObservableCollection<ChecklistItem>();
             Changes = new ObservableCollection<string>();
             AssignedUpdatedTimes = new Dictionary<string, DateTime>();
+            Checklist = new Checklist();
+            Checklists = new ObservableCollection<Checklist>();
 
-            Items.CollectionChanged += Items_CollectionChanged;
-
-            AddItem(new ChecklistItem()
-            {   
-                Name = "Task 1",
-            });
-
-            AddItem(new ChecklistItem()
+            UpdateNetworkChecklistFlares = new Command(async (o) =>
             {
-                Name = "Task 2",
-            });
+                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklist-{Settings.StoreID()}");
+                var sharedPassword = Settings.SharedPassword();
+                var aesInfo = AesInfo.FromPassword(sharedPassword);
+                var latestItems = flares.Select(f =>
+                {
+                    try
+                    {
+                        var checklist = f.TryDecrypt<Checklist>(aesInfo);
+                        checklist.data.Created = f.Created;
+                        return checklist.data;
+                    }
+                    catch (Exception e)
+                    {
+                        return default;
+                    }
+                }).ToList();
+                Console.WriteLine(latestItems);
+                var toRemove = Checklists.Where(checklist => !latestItems.Any(c => checklist.Id == c.Id));
+                foreach (var f in toRemove)
+                {
+                    Checklists.Remove(f);
+                }
 
-            AddItem(new ChecklistItem()
-            {
-                Name = "Task 3",
+                foreach (var newChecklist in latestItems)
+                {
+                    var existing = Checklists.FirstOrDefault(c => c.Id == newChecklist.Id);
+                    if (existing != null && existing.Created < newChecklist.Created)
+                    {
+                        existing.Created = newChecklist.Created;
+                        existing.Items = newChecklist.Items;
+                        existing.Name = newChecklist.Name;
+                    }
+                    else
+                    {
+                        Checklists.Add(newChecklist);
+                    }
+                }
             });
+            UpdateNetworkChecklistFlares.Execute(null);
 
             EditItemCommand = new Command<ChecklistItem>(async (item) =>
             {
@@ -50,8 +82,11 @@ namespace MicroCBuilder.ViewModels
 
         void AddItem(ChecklistItem item)
         {
-            item.PropertyChanged += Item_PropertyChanged;
-            Items.Add(item);
+            if (Checklist != null)
+            {
+                item.PropertyChanged += Item_PropertyChanged;
+                Checklist.Items.Add(item);
+            }
         }
 
         public void ItemAssignedChanged(ChecklistItem item)
@@ -103,9 +138,9 @@ namespace MicroCBuilder.ViewModels
 
             var result = await dialog.ShowAsync();
 
-            if(result == ContentDialogResult.Primary)
+            if (result == ContentDialogResult.Primary)
             {
-                if(existing == null)
+                if (existing == null)
                 {
                     existing = new ChecklistItem();
                 }
@@ -123,6 +158,55 @@ namespace MicroCBuilder.ViewModels
             {
                 AddItem(newItem);
             }
+        }
+
+        public async Task ExportCurrent()
+        {
+            var sharedPassword = Settings.SharedPassword();
+            var stack = new StackPanel() { Orientation = Orientation.Vertical };
+
+            var tb = new TextBox() { PlaceholderText = "Title", Text = Checklist?.Name ?? "" };
+            var useEncryption = new CheckBox() { Content = "Use Encryption" };
+
+            stack.Children.Add(tb);
+            if (!string.IsNullOrWhiteSpace(sharedPassword))
+            {
+                stack.Children.Add(useEncryption);
+            }
+
+            var dialog = new ContentDialog()
+            {
+                Title = "Export to web",
+                Content = stack,
+                PrimaryButtonText = "Export",
+                SecondaryButtonText = "Cancel"
+            };
+            tb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
+            var result = await dialog.ShowAsync();
+            var name = tb.Text;
+            if (result != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            Flare flare;
+            var payload = JsonConvert.SerializeObject(Checklist);
+            if (useEncryption.IsChecked ?? false && !string.IsNullOrWhiteSpace(sharedPassword))
+            {
+                flare = EncryptedFlare.Create(payload, AesInfo.FromPassword(sharedPassword));
+            }
+            else
+            {
+                flare = new Flare(payload);
+                if (!string.IsNullOrWhiteSpace(sharedPassword))
+                {
+                    flare.Sign(AesInfo.FromPassword(sharedPassword));
+                }
+            }
+            flare.Tag = $"micro-c-checklist-{Settings.StoreID()}";
+            flare.Title = tb.Text;
+
+            var success = await flare.Post($"https://dataflare.bbarrett.me/api/Flare");
         }
     }
 }

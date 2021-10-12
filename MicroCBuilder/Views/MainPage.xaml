@@ -12,6 +12,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     RequestedTheme="Default">
     <Grid>
+        <Grid x:Name="printContainer" Opacity="0" HorizontalAlignment="Stretch" Width="1920"></Grid>
         <controls:TabView Grid.Column="0" x:Name="Tabs" AddTabButtonClick="Tabs_AddTabButtonClick" TabCloseRequested="Tabs_TabCloseRequested" Background="#111111" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <controls:TabView.TabStripHeader>
                 <Frame x:Name="TabLeftMargin" Background="Transparent" />
@@ -74,6 +75,7 @@
                     </CommandBar>
                     <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center" Visibility="{Binding IsChecklistPage, Converter={StaticResource HideIfNull}}">
                         <AppBarButton Icon="Add" Label="Add Item" Click="AddChecklistClicked"/>
+                        <AppBarButton Icon="Save" Label="Save" Click="ExportChecklistClicked"/>
                         <AppBarButton Icon="Setting" Label="Settings" Click="SettingsClick"/>
                     </CommandBar>
                 </Grid>

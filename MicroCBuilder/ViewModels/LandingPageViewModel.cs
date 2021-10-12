@@ -1,4 +1,5 @@
 ﻿using DataFlareClient;
+using MicroCBuilder.Models;
 using MicroCLib.Models;
 using System;
 using System.Collections.Generic;
@@ -16,15 +17,18 @@ namespace MicroCBuilder.ViewModels
         public delegate void CreateBuildEventHandler(object sender, BuildInfo name);
         public event CreateBuildEventHandler OnCreateBuild;
 
-        public delegate void CreateChecklistEventHandler(object sender, EventArgs e);
+        public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
         public event CreateChecklistEventHandler OnCreateChecklist;
 
         public ObservableCollection<FlareInfo> Flares { get; set; }
         public Command UpdateNetworkFlares { get; }
 
-        public ObservableCollection<Flare> ChecklistItems { get; set; }
+        public ObservableCollection<Checklist> ChecklistItems { get; set; }
         public Command UpdateNetworkChecklistFlares { get; }
         public Command NewChecklistCommand { get; }
+
+        public Command<List<BuildComponent>> PrintBuildCommand { get; }
+        public Command<List<BuildComponent>> OutputSignsCommand { get; }
 
         public LandingPageViewModel()
         {
@@ -32,6 +36,7 @@ namespace MicroCBuilder.ViewModels
             NewBuildCommand = new Command<string>((name) => OnCreateBuild?.Invoke(this, GetInfo(name)));
 
             Flares = new ObservableCollection<FlareInfo>();
+            ChecklistItems = new ObservableCollection<Checklist>();
 
             UpdateNetworkFlares = new Command(async (o) =>
             {
@@ -90,27 +95,59 @@ namespace MicroCBuilder.ViewModels
 
             UpdateNetworkChecklistFlares = new Command(async (o) =>
             {
-                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklists-{Settings.StoreID()}");
-                var latestItems = flares.GroupBy(f => f.Title).SelectMany(g => g).OrderByDescending(f => f.Created).ToList();
-
-                var toRemove = ChecklistItems.Where(f => !latestItems.Any(g => f.Tag == g.Tag));
-                foreach(var f in toRemove)
+                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklist-{Settings.StoreID()}");
+                var sharedPassword = Settings.SharedPassword();
+                var aesInfo = AesInfo.FromPassword(sharedPassword);
+                var latestItems = flares.Select(f =>
+                {
+                    try
+                    {
+                        var checklist = f.TryDecrypt<Checklist>(aesInfo);
+                        checklist.data.Created = f.Created;
+                        return checklist.data;
+                    }
+                    catch (Exception e)
+                    {
+                        return default;
+                    }
+                }).ToList();
+                Console.WriteLine(latestItems);
+                var toRemove = ChecklistItems.Where(checklist => !latestItems.Any(c => checklist.Id == c.Id));
+                foreach (var f in toRemove)
                 {
                     ChecklistItems.Remove(f);
                 }
 
-                foreach(var newFlare in latestItems)
+                foreach (var newChecklist in latestItems)
                 {
-                    if(!ChecklistItems.Any(c => c.Tag == newFlare.Tag))
+                    var existing = ChecklistItems.FirstOrDefault(c => c.Id == newChecklist.Id);
+                    if(existing != null && existing.Created < newChecklist.Created)
                     {
-                        ChecklistItems.Add(newFlare);
+                        existing.Created = newChecklist.Created;
+                        existing.Items = newChecklist.Items;
+                        existing.Name = newChecklist.Name;
+                    }
+                    else
+                    {
+                        ChecklistItems.Add(newChecklist);
                     }
                 }
             });
+            UpdateNetworkChecklistFlares.Execute(null);
 
             NewChecklistCommand = new Command((o) =>
             {
-                OnCreateChecklist?.Invoke(this, new EventArgs());
+                OnCreateChecklist?.Invoke(this, new Checklist());
+            });
+
+            PrintBuildCommand = new Command<List<BuildComponent>>(async (components) =>
+            {
+                await Views.BuildPage.DoPrintQuote(components);
+            });
+
+            OutputSignsCommand = new Command<List<BuildComponent>>((components) =>
+            {
+
             });
 
         }

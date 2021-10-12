@@ -132,6 +132,7 @@
     <Compile Include="Converters\StringFormatConverter.cs" />
     <Compile Include="LocalSearch.cs" />
     <Compile Include="MCOLBuildContext.cs" />
+    <Compile Include="Models\Checklist.cs" />
     <Compile Include="Models\ChecklistItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
@@ -304,7 +305,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DataFlareClient">
-      <Version>1.1.2</Version>
+      <Version>1.1.3</Version>
     </PackageReference>
     <PackageReference Include="FuzzySharp">
       <Version>2.0.2</Version>

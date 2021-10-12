@@ -1,5 +1,7 @@
-﻿using MicroCBuilder.ViewModels;
+﻿using MicroCBuilder.Models;
+using MicroCBuilder.ViewModels;
 using MicroCLib.Models;
+using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
@@ -17,6 +19,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -44,6 +47,8 @@ namespace MicroCBuilder.Views
         private Visibility progressVisibility;
 
         public static MainPage Instance { get; private set; }
+        public static Grid PrintContainer => Instance?.printContainer;
+        public static PrintHelper PrintHelper { get; set; }
         public string ProgressTitleText { get => progressTitleText; set => SetProperty(ref progressTitleText, value); }
         public string ProgressElapsedText { get => progressElapsedText; set => SetProperty(ref progressElapsedText, value); }
         public double ProgressElapsedValue { get => progressElapsedValue; set => SetProperty(ref progressElapsedValue, value); }
@@ -331,20 +336,24 @@ namespace MicroCBuilder.Views
             }
         }
 
-        private void CreateChecklist()
+        private void CreateChecklist(Checklist checklist)
         {
             if (Tabs.SelectedIndex >= 0 && Tabs.SelectedIndex < Tabs.TabItems.Count)
             {
                 Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
             }
-            var buildPage = PushTab<ChecklistPage>("Checklist");
+            var page = PushTab<ChecklistPage>("Checklist");
+            if(page.DataContext is ChecklistPageViewModel vm)
+            {
+                vm.Checklist = checklist;
+            }
         }
 
         private void Tabs_AddTabButtonClick(Microsoft.UI.Xaml.Controls.TabView sender, object args)
         {
             var page = PushTab<LandingPage>("Micro-C-Builder");
             page.OnCreateBuild += (sender, info) => CreateBuild(info);
-            page.OnCreateChecklist += (sender, args) => CreateChecklist();
+            page.OnCreateChecklist += (sender, checklist) => CreateChecklist(checklist);
         }
 
         private void Tabs_TabCloseRequested(Microsoft.UI.Xaml.Controls.TabView sender, Microsoft.UI.Xaml.Controls.TabViewTabCloseRequestedEventArgs args)
@@ -486,6 +495,14 @@ namespace MicroCBuilder.Views
             }
         }
 
+        private async void ExportChecklistClicked(object sender, RoutedEventArgs e)
+        {
+            if (CurrentTabContent is ChecklistPage page && page.DataContext is ChecklistPageViewModel vm)
+            {
+                await vm.ExportCurrent();
+            }
+        }
+
         protected bool SetProperty<T>(ref T backingStore, T value, [CallerMemberName] string propertyName = "", Action? onChanged = null)
         {
             if (EqualityComparer<T>.Default.Equals(backingStore, value))
@@ -495,6 +512,37 @@ namespace MicroCBuilder.Views
             onChanged?.Invoke();
             OnPropertyChanged(propertyName);
             return true;
+        }
+
+        public static void PrintHelper_Initialize()
+        {
+            PrintHelper = new PrintHelper(PrintContainer);
+
+            PrintHelper.OnPrintCanceled += PrintHelper_OnPrintCanceled;
+            PrintHelper.OnPrintFailed += PrintHelper_OnPrintFailed;
+            PrintHelper.OnPrintSucceeded += PrintHelper_OnPrintSucceeded;
+        }
+
+        public static void PrintHelper_OnPrintSucceeded()
+        {
+            ReleasePrintHelper();
+        }
+
+        public static async void PrintHelper_OnPrintFailed()
+        {
+            ReleasePrintHelper();
+            var dialog = new MessageDialog("Printing failed.");
+            await dialog.ShowAsync();
+        }
+
+        public static void PrintHelper_OnPrintCanceled()
+        {
+            ReleasePrintHelper();
+        }
+
+        public static void ReleasePrintHelper()
+        {
+            PrintHelper?.Dispose();
         }
 
         #region INotifyPropertyChanged

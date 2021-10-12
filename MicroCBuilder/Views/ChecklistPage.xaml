@@ -4,7 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MicroCBuilder.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:viewmodels="using:MicroCBuilder.ViewModels"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:MicroCBuilder.ViewModels"
+    xmlns:models="using:MicroCBuilder.Models"
     mc:Ignorable="d"
     x:Name="page"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -17,14 +19,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" BorderBrush="{StaticResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="1">
-            <ListView SelectionMode="Single">
-                <ListView.Items>
-                    <x:String>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</x:String>
-                    <x:String>BBB</x:String>
-                    <x:String>CCC</x:String>
-                </ListView.Items>
+            <ListView SelectionMode="Single" ItemsSource="{Binding Checklists}">
                 <ListView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:Checklist">
                         <Grid Margin="10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -33,12 +30,16 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <ProgressBar Grid.Row="0" Grid.ColumnSpan="2" Value="30" VerticalAlignment="Stretch" ></ProgressBar>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding }" FontSize="24" Margin="20,5,0,5" TextTrimming="CharacterEllipsis"/>
+                            <ProgressBar Grid.Row="0" Grid.ColumnSpan="2" Value="{Binding Percentage}" VerticalAlignment="Stretch"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontSize="24" Margin="20,5,0,5" TextTrimming="CharacterEllipsis"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" FontSize="24" Margin="0,5,20,5">
-                                <Span>3</Span>
+                                <Span>
+                                    <Run Text="{Binding Completed}"/>
+                                </Span>
                                 <Span>/</Span>
-                                <Span>10</Span>
+                                <Span>
+                                    <Run Text="{Binding Items.Count}"/>
+                                </Span>
                             </TextBlock>
 
                         </Grid>
@@ -52,8 +53,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Checklist Title" FontSize="36"/>
-                <ListView Grid.Row="1" ItemsSource="{Binding Items}" CanReorderItems="True" AllowDrop="True" SelectionMode="None" IsTabStop="False" TabFocusNavigation="Local">
+                <TextBox Grid.Row="0" Text="{Binding Checklist.Name, Mode=TwoWay}" FontSize="36"/>
+                <ListView Grid.Row="1" ItemsSource="{Binding Checklist.Items}" CanReorderItems="True" AllowDrop="True" SelectionMode="None" IsTabStop="False" TabFocusNavigation="Local">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />

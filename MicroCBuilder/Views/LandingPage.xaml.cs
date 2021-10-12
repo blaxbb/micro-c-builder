@@ -1,4 +1,5 @@
-﻿using MicroCBuilder.ViewModels;
+﻿using MicroCBuilder.Models;
+using MicroCBuilder.ViewModels;
 using MicroCLib.Models;
 using Newtonsoft.Json;
 using System;
@@ -31,7 +32,7 @@ namespace MicroCBuilder.Views
         public delegate void CreateBuildEventHandler(object sender, BuildInfo info);
         public event CreateBuildEventHandler OnCreateBuild;
 
-        public delegate void CreateChecklistEventHandler(object sender, EventArgs e);
+        public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
         public event CreateChecklistEventHandler OnCreateChecklist;
 
         string[] files = new string[]
@@ -97,9 +98,9 @@ namespace MicroCBuilder.Views
             }
         }
 
-        private void CreateChecklist(object sender, EventArgs e)
+        private void CreateChecklist(object sender, Checklist checklist)
         {
-            OnCreateChecklist?.Invoke(this, e);
+            OnCreateChecklist?.Invoke(this, checklist);
         }
 
         private void FlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -116,7 +117,10 @@ namespace MicroCBuilder.Views
 
         private void ChecklistFlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (e.OriginalSource is FrameworkElement ele && ele.DataContext is Checklist checklist)
+            {
+                CreateChecklist(sender, checklist);
+            }
         }
     }
 
