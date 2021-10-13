@@ -123,8 +123,8 @@
                         <Grid Height="75" Margin="20,0,20,0">
                             <Grid.ContextFlyout>
                                 <MenuFlyout>
-                                    <MenuFlyoutItem Text="Print" Command="{Binding DataContext.PrintBuildCommand, ElementName=page}" CommandParameter="{Binding Components}"/>
-                                    <MenuFlyoutItem Text="Output Sign Batch" Command="{Binding DataContext.OutputSignsCommand, ElementName=page}" CommandParameter="{Binding Components}"/>
+                                    <MenuFlyoutItem Text="Print" Command="{Binding DataContext.PrintBuildCommand, ElementName=page}" CommandParameter="{Binding }"/>
+                                    <MenuFlyoutItem Text="Output Sign Batch" Command="{Binding DataContext.OutputSignsCommand, ElementName=page}" CommandParameter="{Binding }"/>
                                 </MenuFlyout>
                             </Grid.ContextFlyout>
                             <Grid.ColumnDefinitions>

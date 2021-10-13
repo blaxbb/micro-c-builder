@@ -28,6 +28,12 @@ namespace MicroCBuilder.Views
             BaseUrlTextBox.Text = Settings.SignBaseUrl();
         }
 
+        public ExportSignsControl(string? title)
+            : this()
+        {
+            TitleTextBox.Text = title;
+        }
+
         public string Title => TitleTextBox.Text;
         public string SignType => SignTypeComboxBox.SelectedItem.ToString();
         public string Username => UsernameTextBox.Text;

@@ -80,7 +80,7 @@ namespace MicroCBuilder.ViewModels
             });
 
             Save = new Command(DoSave);
-            SaveSigns = new Command(DoSaveSigns);
+            SaveSigns = new Command(async (o) => DoSaveSigns(Components.ToList()));
 
             Load = new Command(DoLoad);
 
@@ -714,10 +714,10 @@ namespace MicroCBuilder.ViewModels
             }
         }
 
-        private async void DoSaveSigns(object obj)
+        public static async void DoSaveSigns(List<BuildComponent> Components, string? title = null)
         {
 
-            var signControl = new ExportSignsControl();
+            var signControl = new ExportSignsControl(title);
 
             var dialog = new ContentDialog()
             {

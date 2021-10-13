@@ -27,8 +27,8 @@ namespace MicroCBuilder.ViewModels
         public Command UpdateNetworkChecklistFlares { get; }
         public Command NewChecklistCommand { get; }
 
-        public Command<List<BuildComponent>> PrintBuildCommand { get; }
-        public Command<List<BuildComponent>> OutputSignsCommand { get; }
+        public Command<FlareInfo> PrintBuildCommand { get; }
+        public Command<FlareInfo> OutputSignsCommand { get; }
 
         public LandingPageViewModel()
         {
@@ -140,14 +140,14 @@ namespace MicroCBuilder.ViewModels
                 OnCreateChecklist?.Invoke(this, new Checklist());
             });
 
-            PrintBuildCommand = new Command<List<BuildComponent>>(async (components) =>
+            PrintBuildCommand = new Command<FlareInfo>(async (info) =>
             {
-                await Views.BuildPage.DoPrintQuote(components);
+                await Views.BuildPage.DoPrintQuote(info.Components);
             });
 
-            OutputSignsCommand = new Command<List<BuildComponent>>((components) =>
+            OutputSignsCommand = new Command<FlareInfo>(async (info) =>
             {
-
+                BuildPageViewModel.DoSaveSigns(info.Components, info.Flare.Title);
             });
 
         }
