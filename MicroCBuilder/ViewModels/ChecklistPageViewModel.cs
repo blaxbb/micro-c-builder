@@ -25,6 +25,8 @@ namespace MicroCBuilder.ViewModels
 
         Dictionary<string, DateTime> AssignedUpdatedTimes { get; }
 
+        public bool UseEncryption { get; set; }
+
         public ChecklistPageViewModel()
         {
             Changes = new ObservableCollection<string>();
@@ -43,6 +45,7 @@ namespace MicroCBuilder.ViewModels
                     {
                         var checklist = f.TryDecrypt<Checklist>(aesInfo);
                         checklist.data.Created = f.Created;
+                        checklist.data.UseEncryption = checklist.encrypted;
                         return checklist.data;
                     }
                     catch (Exception e)
@@ -80,19 +83,21 @@ namespace MicroCBuilder.ViewModels
             });
         }
 
-        void AddItem(ChecklistItem item)
+        async Task AddItem(ChecklistItem item)
         {
             if (Checklist != null)
             {
                 item.PropertyChanged += Item_PropertyChanged;
                 Checklist.Items.Add(item);
+                await AutoExport(checklist.UseEncryption);
             }
         }
 
-        public void ItemAssignedChanged(ChecklistItem item)
+        public async Task ItemAssignedChanged(ChecklistItem item)
         {
             Changes.Add($"CHANGED {item.Name} ASSIGNED TO {item.Assigned}");
             Debug.WriteLine(Changes.Last());
+            await AutoExport(checklist.UseEncryption);
         }
 
         private async void Item_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -107,7 +112,7 @@ namespace MicroCBuilder.ViewModels
                     case nameof(ChecklistItem.Complete):
                         Changes.Add($"CHANGED {item.Name} COMPLETE TO {(item.Complete ? "YES" : "NO")}");
                         Debug.WriteLine(Changes.Last());
-
+                        await AutoExport(checklist.UseEncryption);
                         break;
                 }
             }
@@ -162,13 +167,14 @@ namespace MicroCBuilder.ViewModels
 
         public async Task ExportCurrent()
         {
-            var sharedPassword = Settings.SharedPassword();
             var stack = new StackPanel() { Orientation = Orientation.Vertical };
 
             var tb = new TextBox() { PlaceholderText = "Title", Text = Checklist?.Name ?? "" };
             var useEncryption = new CheckBox() { Content = "Use Encryption" };
 
             stack.Children.Add(tb);
+
+            var sharedPassword = Settings.SharedPassword();
             if (!string.IsNullOrWhiteSpace(sharedPassword))
             {
                 stack.Children.Add(useEncryption);
@@ -189,22 +195,30 @@ namespace MicroCBuilder.ViewModels
                 return;
             }
 
+            await AutoExport(useEncryption.IsChecked ?? false);
+        }
+
+        public async Task AutoExport(bool encrypt)
+        {
+            var sharedPassword = Settings.SharedPassword();
             Flare flare;
             var payload = JsonConvert.SerializeObject(Checklist);
-            if (useEncryption.IsChecked ?? false && !string.IsNullOrWhiteSpace(sharedPassword))
+            if (encrypt && !string.IsNullOrWhiteSpace(sharedPassword))
             {
+                checklist.UseEncryption = true;
                 flare = EncryptedFlare.Create(payload, AesInfo.FromPassword(sharedPassword));
             }
             else
             {
                 flare = new Flare(payload);
+                checklist.UseEncryption = false;
                 if (!string.IsNullOrWhiteSpace(sharedPassword))
                 {
                     flare.Sign(AesInfo.FromPassword(sharedPassword));
                 }
             }
             flare.Tag = $"micro-c-checklist-{Settings.StoreID()}";
-            flare.Title = tb.Text;
+            flare.Title = Checklist.Name;
 
             var success = await flare.Post($"https://dataflare.bbarrett.me/api/Flare");
         }

@@ -104,6 +104,7 @@ namespace MicroCBuilder.ViewModels
                     {
                         var checklist = f.TryDecrypt<Checklist>(aesInfo);
                         checklist.data.Created = f.Created;
+                        checklist.data.UseEncryption = checklist.encrypted;
                         return checklist.data;
                     }
                     catch (Exception e)

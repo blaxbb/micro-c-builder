@@ -54,7 +54,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBox Grid.Row="0" Text="{Binding Checklist.Name, Mode=TwoWay}" FontSize="36"/>
-                <ListView Grid.Row="1" ItemsSource="{Binding Checklist.Items}" CanReorderItems="True" AllowDrop="True" SelectionMode="None" IsTabStop="False" TabFocusNavigation="Local">
+                <ListView x:Name="ChecklistListView" Grid.Row="1" ItemsSource="{Binding Checklist.Items}" CanReorderItems="True" CanDragItems="True" AllowDrop="True" SelectionMode="None" IsTabStop="False" TabFocusNavigation="Local">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />

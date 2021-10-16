@@ -28,9 +28,21 @@ namespace MicroCBuilder.Views
         public ChecklistPage()
         {
             this.InitializeComponent();
+            ChecklistListView.DragItemsCompleted += ChecklistListView_DragItemsCompleted;
         }
 
-        private void AssignedTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        private async void ChecklistListView_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+        {
+            if(args.DropResult == Windows.ApplicationModel.DataTransfer.DataPackageOperation.Move)
+            {
+                if (DataContext is ChecklistPageViewModel vm)
+                {
+                    await vm.AutoExport(vm.Checklist.UseEncryption);
+                }
+            }
+        }
+
+        private async void AssignedTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
@@ -38,7 +50,7 @@ namespace MicroCBuilder.Views
                 {
                     item.Assigned = textBox.Text;
                     grid.Background = new SolidColorBrush(Colors.Transparent);
-                    vm.ItemAssignedChanged(item);
+                    await vm.ItemAssignedChanged(item);
                 }
             }
             else

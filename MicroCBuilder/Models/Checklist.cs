@@ -22,6 +22,8 @@ namespace MicroCBuilder.Models
         public int Percentage => 100 * (int)(Completed / (float)Items.Count());
         [JsonIgnore]
         public DateTime Created { get; set; }
+        [JsonIgnore]
+        public bool UseEncryption { get; set; }
 
         public Checklist()
         {
