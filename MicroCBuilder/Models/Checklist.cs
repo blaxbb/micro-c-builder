@@ -12,16 +12,20 @@ namespace MicroCBuilder.Models
 {
     public class Checklist : INotifyPropertyChanged
     {
+        private string name;
+        private DateTime created;
+        private ObservableCollection<ChecklistItem> items;
+
         public Guid Id { get; set; }
-        public ObservableCollection<ChecklistItem> Items { get; set; }
-        public string Name { get; set; }
+        public ObservableCollection<ChecklistItem> Items { get => items; set => SetProperty(ref items, value); }
+        public string Name { get => name; set => SetProperty(ref name, value); }
 
         [JsonIgnore]
         public int Completed => Items.Count(i => i != null && i.Complete);
         [JsonIgnore]
-        public int Percentage => 100 * (int)(Completed / (float)Items.Count());
+        public int Percentage => (int)(100 * Completed / (float)Items.Count());
         [JsonIgnore]
-        public DateTime Created { get; set; }
+        public DateTime Created { get => created; set => SetProperty(ref created, value); }
         [JsonIgnore]
         public bool UseEncryption { get; set; }
 
@@ -33,7 +37,7 @@ namespace MicroCBuilder.Models
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        public void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             var changed = PropertyChanged;
             if (changed == null)

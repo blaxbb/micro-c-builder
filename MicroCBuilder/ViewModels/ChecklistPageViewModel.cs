@@ -65,9 +65,10 @@ namespace MicroCBuilder.ViewModels
                     var existing = Checklists.FirstOrDefault(c => c.Id == newChecklist.Id);
                     if (existing != null && existing.Created < newChecklist.Created)
                     {
-                        existing.Created = newChecklist.Created;
-                        existing.Items = newChecklist.Items;
-                        existing.Name = newChecklist.Name;
+                        var index = Checklists.IndexOf(existing);
+
+                        Checklists.Remove(existing);
+                        Checklists.Insert(index, newChecklist);
                     }
                     else
                     {
@@ -81,6 +82,76 @@ namespace MicroCBuilder.ViewModels
             {
                 item = await ShowEditItemDialog(item);
             });
+
+            FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");
+            var dispatcher = Windows.UI.Xaml.Window.Current.Dispatcher;
+            FlareHubManager.OnFlareReceived += async (flare) =>
+            {
+                await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    AddChecklistFlare(flare);
+                });
+            };
+        }
+
+        void AddChecklistFlare(Flare flare)
+        {
+            if (flare.Tag != $"micro-c-checklist-{Settings.StoreID()}")
+            {
+                return;
+            }
+
+            var sharedPassword = Settings.SharedPassword();
+
+            AesInfo? aesInfo = null;
+            if (!string.IsNullOrWhiteSpace(sharedPassword))
+            {
+                aesInfo = AesInfo.FromPassword(sharedPassword);
+            }
+
+            Checklist newChecklist = null;
+
+            if (aesInfo != null)
+            {
+                var (data, encrypted) = flare.TryDecrypt<Checklist>(aesInfo);
+                newChecklist = data;
+            }
+            else
+            {
+                try
+                {
+                    newChecklist = (Checklist)flare.Value(typeof(Checklist));
+                }
+                catch (Exception ex)
+                {
+                    //flare is likely encrypted (or possibly malformed)
+                }
+            }
+
+            if (newChecklist == null)
+            {
+                return;
+            }
+            newChecklist.Created = flare.Created;
+
+            var existing = Checklists.FirstOrDefault(c => c.Id == newChecklist.Id);
+            if (existing != null && existing.Created < newChecklist.Created)
+            {
+                var index = Checklists.IndexOf(existing);
+
+                Checklists.Remove(existing);
+                Checklists.Insert(index, newChecklist);
+            }
+            else
+            {
+                Checklists.Add(newChecklist);
+            }
+            OnPropertyChanged(nameof(Checklists));
+
+            if(Checklist.Id == newChecklist.Id)
+            {
+                Checklist = newChecklist;
+            }
         }
 
         async Task AddItem(ChecklistItem item)

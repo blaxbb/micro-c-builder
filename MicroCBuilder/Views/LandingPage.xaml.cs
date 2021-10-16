@@ -52,17 +52,17 @@ namespace MicroCBuilder.Views
             {
                 vm.OnCreateBuild += CreateBuild;
                 vm.OnCreateChecklist += CreateChecklist;
-                TimeSpan period = TimeSpan.FromSeconds(30);
+                //TimeSpan period = TimeSpan.FromSeconds(30);
 
-                ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
-                {
-                    Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-                    {
-                        vm.UpdateNetworkFlares?.Execute(null);
-                    });
+                //ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
+                //{
+                //    Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                //    {
+                //        vm.UpdateNetworkFlares?.Execute(null);
+                //    });
 
 
-                }, period);
+                //}, period);
             }
         }
 

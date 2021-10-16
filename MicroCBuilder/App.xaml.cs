@@ -39,6 +39,7 @@ namespace MicroCBuilder
             this.Suspending += OnSuspending;
             AppCenter.Start("172e9bf0-70cd-4933-a19c-626e27f8951a",
                    typeof(Analytics), typeof(Crashes));
+            FlareHubManager.Initialize();
         }
 
         /// <summary>

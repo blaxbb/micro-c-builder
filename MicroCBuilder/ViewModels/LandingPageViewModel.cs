@@ -51,29 +51,7 @@ namespace MicroCBuilder.ViewModels
                 var toAdd = flares.Where(f => Flares.All(existing => existing.Flare.ShortCode != f.ShortCode)).OrderBy(f => f.Created).ToList();
                 foreach(var f in toAdd)
                 {
-                    if (aesInfo != null)
-                    {
-                        var (data, encrypted) = f.TryDecrypt<List<BuildComponent>>(aesInfo);
-                        if (data != null)
-                        {
-                            Flares.Insert(0, new FlareInfo(f));
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            var data = f.Value(typeof(List<BuildComponent>));
-                            if (data != null)
-                            {
-                                Flares.Insert(0, new FlareInfo(f));
-                            }
-                        }
-                        catch(Exception ex)
-                        {
-                            //flare is likely encrypted (or possibly malformed)
-                        }
-                    }
+                    AddBuildFlare(f);
                 }
 
                 var toRemove = Flares.Where(f => flares.All(updated => updated.ShortCode != f.Flare.ShortCode)).ToList();
@@ -151,14 +129,121 @@ namespace MicroCBuilder.ViewModels
                 BuildPageViewModel.DoSaveSigns(info.Components, info.Flare.Title);
             });
 
+            FlareHubManager.Subscribe($"micro-c-{Settings.StoreID()}");
+            FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");
+            var dispatcher = Windows.UI.Xaml.Window.Current.Dispatcher;
+            FlareHubManager.OnFlareReceived += async (flare) =>
+            {
+                await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    AddBuildFlare(flare);
+                    AddChecklistFlare(flare);
+                });
+            };
+
         }
 
+        private void AddBuildFlare(Flare flare)
+        {
+            if (flare.Tag != $"micro-c-{Settings.StoreID()}")
+            {
+                return;
+            }
+
+            var sharedPassword = Settings.SharedPassword();
+
+            AesInfo? aesInfo = null;
+            if (!string.IsNullOrWhiteSpace(sharedPassword))
+            {
+                aesInfo = AesInfo.FromPassword(sharedPassword);
+            }
+
+            if (aesInfo != null)
+            {
+                var (data, encrypted) = flare.TryDecrypt<List<BuildComponent>>(aesInfo);
+                if (data != null)
+                {
+                    Flares.Insert(0, new FlareInfo(flare));
+                }
+            }
+            else
+            {
+                try
+                {
+                    var data = flare.Value(typeof(List<BuildComponent>));
+                    if (data != null)
+                    {
+                        Flares.Insert(0, new FlareInfo(flare));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    //flare is likely encrypted (or possibly malformed)
+                }
+            }
+        }
+
+        private void AddChecklistFlare(Flare flare)
+        {
+            if (flare.Tag != $"micro-c-checklist-{Settings.StoreID()}")
+            {
+                return;
+            }
+
+
+            var sharedPassword = Settings.SharedPassword();
+
+            AesInfo? aesInfo = null;
+            if (!string.IsNullOrWhiteSpace(sharedPassword))
+            {
+                aesInfo = AesInfo.FromPassword(sharedPassword);
+            }
+
+            Checklist newChecklist = null;
+
+            if (aesInfo != null)
+            {
+                var (data, encrypted) = flare.TryDecrypt<Checklist>(aesInfo);
+                newChecklist = data;
+            }
+            else
+            {
+                try
+                {
+                    newChecklist = (Checklist)flare.Value(typeof(Checklist));
+                }
+                catch (Exception ex)
+                {
+                    //flare is likely encrypted (or possibly malformed)
+                }
+            }
+
+            if (newChecklist == null)
+            {
+                return;
+            }
+            newChecklist.Created = flare.Created;
+
+            var existing = ChecklistItems.FirstOrDefault(c => c.Id == newChecklist.Id);
+            if (existing != null && existing.Created < newChecklist.Created)
+            {
+                var index = ChecklistItems.IndexOf(existing);
+
+                ChecklistItems.Remove(existing);
+                ChecklistItems.Insert(index, newChecklist);
+            }
+            else
+            {
+                ChecklistItems.Add(newChecklist);
+            }
+        }
 
         private BuildInfo GetInfo(string name)
         {
             return BuildTemplates.FirstOrDefault(b => b.Name == name);
         }
     }
+
     public class BuildInfo
     {
         public string Name { get; set; }

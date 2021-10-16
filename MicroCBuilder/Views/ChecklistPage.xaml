@@ -19,7 +19,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" BorderBrush="{StaticResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="1">
-            <ListView SelectionMode="Single" ItemsSource="{Binding Checklists}">
+            <ListView x:Name="ChecklistsListView" SelectionMode="Single" ItemsSource="{Binding Checklists}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:Checklist">
                         <Grid Margin="10">
