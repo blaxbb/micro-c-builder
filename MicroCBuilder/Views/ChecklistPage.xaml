@@ -19,7 +19,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" BorderBrush="{StaticResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="1">
-            <ListView x:Name="ChecklistsListView" SelectionMode="Single" ItemsSource="{Binding Checklists}">
+            <ListView x:Name="ChecklistsListView" SelectionMode="Single" ItemsSource="{Binding Checklists}" SelectedItem="{Binding Checklist, Mode=TwoWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:Checklist">
                         <Grid Margin="10">
@@ -81,6 +81,11 @@
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
+                    <ListView.Footer>
+                        <Button HorizontalAlignment="Stretch" Command="{Binding EditItemCommand}" Margin="20,0,20,0">
+                            <SymbolIcon Symbol="Add"/>
+                        </Button>
+                    </ListView.Footer>
                 </ListView>
             </Grid>
         </Border>

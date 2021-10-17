@@ -189,18 +189,26 @@
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:Checklist">
-                        <Grid Height="75">
+                        <Grid Margin="10">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="24" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="AAA" TextAlignment="Right" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Text="BBB" TextAlignment="Right" VerticalAlignment="Center"/>
+                            <ProgressBar Grid.Row="0" Grid.ColumnSpan="2" Value="{Binding Percentage}" VerticalAlignment="Stretch"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontSize="24" Margin="20,5,0,5" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" FontSize="24" Margin="0,5,20,5">
+                                <Span>
+                                    <Run Text="{Binding Completed}"/>
+                                </Span>
+                                <Span>/</Span>
+                                <Span>
+                                    <Run Text="{Binding Items.Count}"/>
+                                </Span>
+                            </TextBlock>
+
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

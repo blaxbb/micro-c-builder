@@ -17,9 +17,8 @@ namespace MicroCBuilder.ViewModels
     {
         private Checklist checklist;
 
-        public Checklist Checklist { get => checklist; set { SetProperty(ref checklist, value); checklist.Items.ToList().ForEach(c => c.PropertyChanged += Item_PropertyChanged); } }
+        public Checklist Checklist { get => checklist; set { SetProperty(ref checklist, value); checklist?.Items.ToList().ForEach(c => c.PropertyChanged += Item_PropertyChanged); } }
         public Command<ChecklistItem> EditItemCommand { get; }
-        public ObservableCollection<string> Changes { get; }
         public ObservableCollection<Checklist> Checklists { get; }
         public Command UpdateNetworkChecklistFlares { get; }
 
@@ -29,7 +28,6 @@ namespace MicroCBuilder.ViewModels
 
         public ChecklistPageViewModel()
         {
-            Changes = new ObservableCollection<string>();
             AssignedUpdatedTimes = new Dictionary<string, DateTime>();
             Checklist = new Checklist();
             Checklists = new ObservableCollection<Checklist>();
@@ -148,7 +146,7 @@ namespace MicroCBuilder.ViewModels
             }
             OnPropertyChanged(nameof(Checklists));
 
-            if(Checklist.Id == newChecklist.Id)
+            if(Checklist == null || Checklist.Id == newChecklist.Id)
             {
                 Checklist = newChecklist;
             }
@@ -160,14 +158,12 @@ namespace MicroCBuilder.ViewModels
             {
                 item.PropertyChanged += Item_PropertyChanged;
                 Checklist.Items.Add(item);
-                await AutoExport(checklist.UseEncryption);
+                await AutoExport(Checklist.UseEncryption);
             }
         }
 
         public async Task ItemAssignedChanged(ChecklistItem item)
         {
-            Changes.Add($"CHANGED {item.Name} ASSIGNED TO {item.Assigned}");
-            Debug.WriteLine(Changes.Last());
             await AutoExport(checklist.UseEncryption);
         }
 
@@ -181,8 +177,6 @@ namespace MicroCBuilder.ViewModels
 
                         break;
                     case nameof(ChecklistItem.Complete):
-                        Changes.Add($"CHANGED {item.Name} COMPLETE TO {(item.Complete ? "YES" : "NO")}");
-                        Debug.WriteLine(Changes.Last());
                         await AutoExport(checklist.UseEncryption);
                         break;
                 }
@@ -219,8 +213,14 @@ namespace MicroCBuilder.ViewModels
                 if (existing == null)
                 {
                     existing = new ChecklistItem();
+                    existing.Name = control.NameTextBox.Text;
+                    await AddItem(existing);
                 }
-                existing.Name = control.NameTextBox.Text;
+                else
+                {
+                    existing.Name = control.NameTextBox.Text;
+                    await AutoExport(Checklist.UseEncryption);
+                }
                 return existing;
             }
 
