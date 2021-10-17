@@ -32,6 +32,14 @@ namespace MicroCBuilder.ViewModels
             Checklist = new Checklist();
             Checklists = new ObservableCollection<Checklist>();
 
+            ChecklistFavoriteCache.OnChecklistFavoritesUpdated += (favorites) =>
+            {
+                foreach (var checklist in Checklists)
+                {
+                    checklist.IsFavorited = favorites.IsFavorited(checklist);
+                }
+            };
+
             UpdateNetworkChecklistFlares = new Command(async (o) =>
             {
                 var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklist-{Settings.StoreID()}");
@@ -44,6 +52,7 @@ namespace MicroCBuilder.ViewModels
                         var checklist = f.TryDecrypt<Checklist>(aesInfo);
                         checklist.data.Created = f.Created;
                         checklist.data.UseEncryption = checklist.encrypted;
+                        checklist.data.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(checklist.data) ?? false;
                         return checklist.data;
                     }
                     catch (Exception e)
@@ -131,6 +140,7 @@ namespace MicroCBuilder.ViewModels
                 return;
             }
             newChecklist.Created = flare.Created;
+            newChecklist.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(newChecklist) ?? false;
 
             var existing = Checklists.FirstOrDefault(c => c.Id == newChecklist.Id);
             if (existing != null && existing.Created < newChecklist.Created)
@@ -232,7 +242,7 @@ namespace MicroCBuilder.ViewModels
             var newItem = await ShowEditItemDialog();
             if (newItem != null)
             {
-                AddItem(newItem);
+                await AddItem(newItem);
             }
         }
 

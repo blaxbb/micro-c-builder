@@ -267,6 +267,10 @@ namespace MicroCBuilder.Views
 
 
             var dispatcher = Window.Current.Dispatcher;
+
+            var checklistCache = new ChecklistFavoriteCache();
+            await checklistCache.LoadCache();
+
             var cache = new BuildComponentCache();
             if (cache.Cache.Count == 0)
             {

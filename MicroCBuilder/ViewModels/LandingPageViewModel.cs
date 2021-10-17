@@ -38,6 +38,15 @@ namespace MicroCBuilder.ViewModels
             Flares = new ObservableCollection<FlareInfo>();
             ChecklistItems = new ObservableCollection<Checklist>();
 
+            ChecklistFavoriteCache.OnChecklistFavoritesUpdated += (favorites) =>
+            {
+                foreach (var checklist in ChecklistItems)
+                {
+                    checklist.IsFavorited = favorites.IsFavorited(checklist);
+                }
+            };
+
+
             UpdateNetworkFlares = new Command(async (o) =>
             {
                 var sharedPassword = Settings.SharedPassword();
@@ -83,6 +92,7 @@ namespace MicroCBuilder.ViewModels
                         var checklist = f.TryDecrypt<Checklist>(aesInfo);
                         checklist.data.Created = f.Created;
                         checklist.data.UseEncryption = checklist.encrypted;
+                        checklist.data.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(checklist.data) ?? false;
                         return checklist.data;
                     }
                     catch (Exception e)
@@ -223,6 +233,7 @@ namespace MicroCBuilder.ViewModels
                 return;
             }
             newChecklist.Created = flare.Created;
+            newChecklist.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(newChecklist) ?? false;
 
             var existing = ChecklistItems.FirstOrDefault(c => c.Id == newChecklist.Id);
             if (existing != null && existing.Created < newChecklist.Created)

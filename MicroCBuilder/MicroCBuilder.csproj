@@ -123,6 +123,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="BuildComponentCache.cs" />
+    <Compile Include="ChecklistFavoriteCache.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Converters\NullVisibilityConverter.cs" />
     <Compile Include="Converters\FocusVisibilityConverter.cs" />

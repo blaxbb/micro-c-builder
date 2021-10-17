@@ -15,6 +15,8 @@ namespace MicroCBuilder.Models
         private string name;
         private DateTime created;
         private ObservableCollection<ChecklistItem> items;
+        private bool isFavorited;
+        private bool useEncryption;
 
         public Guid Id { get; set; }
         public ObservableCollection<ChecklistItem> Items { get => items; set => SetProperty(ref items, value); }
@@ -27,7 +29,9 @@ namespace MicroCBuilder.Models
         [JsonIgnore]
         public DateTime Created { get => created; set => SetProperty(ref created, value); }
         [JsonIgnore]
-        public bool UseEncryption { get; set; }
+        public bool UseEncryption { get => useEncryption; set => SetProperty(ref useEncryption, value); }
+        [JsonIgnore]
+        public bool IsFavorited { get => isFavorited; set => SetProperty(ref isFavorited, value); }
 
         public Checklist()
         {
