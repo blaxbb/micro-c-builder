@@ -13,11 +13,11 @@
     RequestedTheme="Default">
     <Grid>
         <Grid x:Name="printContainer" Opacity="0" HorizontalAlignment="Stretch" Width="1920"></Grid>
-        <controls:TabView Grid.Column="0" x:Name="Tabs" AddTabButtonClick="Tabs_AddTabButtonClick" TabCloseRequested="Tabs_TabCloseRequested" Background="#111111" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <controls:TabView Grid.Column="0" x:Name="Tabs" AddTabButtonClick="Tabs_AddTabButtonClick" TabCloseRequested="Tabs_TabCloseRequested" Background="#111111" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TabWidthMode="SizeToContent">
             <controls:TabView.TabStripHeader>
                 <Frame x:Name="TabLeftMargin" Background="Transparent" />
             </controls:TabView.TabStripHeader>
-            <controls:TabView.TabStripFooter >
+            <controls:TabView.TabStripFooter>
                 <Grid HorizontalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -25,8 +25,8 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Grid Grid.Column="0" MinWidth="50" x:Name="TabDragArea" Background="Transparent"/>
-                    <Grid Grid.Column="2" x:Name="TabRightMargin"/>
-                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Right" Height="40" VerticalAlignment="Center" Visibility="{Binding IsBuildPage, Converter={StaticResource HideIfNull}}">
+                    <Grid Grid.Column="2" MinWidth="150" x:Name="TabRightMargin"/>
+                    <CommandBar Grid.Column="1" DefaultLabelPosition="Right" HorizontalAlignment="Stretch" Height="40" VerticalAlignment="Center" Visibility="{Binding IsBuildPage, Converter={StaticResource HideIfNull}}">
                         <CommandBar.SecondaryCommands>
                             <!--<AppBarButton Icon="Clear" Label="Reset" Click="ResetClicked"/>-->
                             <AppBarButton Icon="Share" Label="Export to Microcenter.com" Click="ExportClicked"/>
