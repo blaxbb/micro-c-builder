@@ -479,19 +479,20 @@ namespace MicroCBuilder.Views
 
         public async Task PromoPrintClicked()
         {
-            var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            var stack = new StackPanel() { Orientation = Orientation.Vertical, Spacing = 5 };
 
             var cb = new CheckBox() { Content = "Split page", IsChecked = true };
+            var buildTechTextBox = new TextBox() { PlaceholderText = "Build Tech" };
+            var extraTextBox = new TextBox() { PlaceholderText = "Annotation" };
 
-            grid.Children.Add(cb);
-
-            Grid.SetRow(cb, 0);
+            stack.Children.Add(cb);
+            stack.Children.Add(buildTechTextBox);
+            stack.Children.Add(extraTextBox);
 
             var dialog = new ContentDialog()
             {
                 Title = "Print options",
-                Content = grid,
+                Content = stack,
                 PrimaryButtonText = "Print",
                 SecondaryButtonText = "Cancel"
             };
@@ -499,11 +500,22 @@ namespace MicroCBuilder.Views
             var doSplit = cb.IsChecked ?? false;
             if (result != ContentDialogResult.Secondary)
             {
-                await DoPrintPromo(vm.Components.ToList(), doSplit);
+                List<string> extraStrings = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(buildTechTextBox.Text))
+                {
+                    extraStrings.Add($"Built by {buildTechTextBox.Text}");
+                }
+                if (!string.IsNullOrWhiteSpace(extraTextBox.Text))
+                {
+                    extraStrings.Add(extraTextBox.Text);
+                }
+                
+                await DoPrintPromo(vm.Components.ToList(), extraStrings, doSplit);
             }
         }
 
-        public static async Task DoPrintPromo(List<BuildComponent> Components, bool IsSplit)
+        public static async Task DoPrintPromo(List<BuildComponent> Components, List<string> extraStrings, bool IsSplit)
         {
             var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
@@ -611,6 +623,11 @@ namespace MicroCBuilder.Views
             if(_case?.Item != null)
             {
                 promoItems.Add(new TextBlock() { Text = $"{_case.Item.Name}", TextWrapping = TextWrapping.WrapWholeWords, MaxLines = 1 });
+            }
+
+            foreach(var text in extraStrings)
+            {
+                promoItems.Add(new TextBlock() { Text = text, TextWrapping = TextWrapping.NoWrap, MaxLines = 1 });
             }
 
             promoGrid.ColumnDefinitions.Add(new ColumnDefinition());
