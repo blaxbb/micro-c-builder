@@ -240,10 +240,6 @@ namespace MicroCBuilder.ViewModels
         public async Task AddItem()
         {
             var newItem = await ShowEditItemDialog();
-            if (newItem != null)
-            {
-                await AddItem(newItem);
-            }
         }
 
         public async Task ExportCurrent()
