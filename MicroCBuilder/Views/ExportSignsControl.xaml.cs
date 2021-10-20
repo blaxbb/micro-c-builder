@@ -31,7 +31,7 @@ namespace MicroCBuilder.Views
         public ExportSignsControl(string? title)
             : this()
         {
-            TitleTextBox.Text = title;
+            TitleTextBox.Text = title ?? "";
         }
 
         public string Title => TitleTextBox.Text;
