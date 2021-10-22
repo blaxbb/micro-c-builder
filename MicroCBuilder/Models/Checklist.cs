@@ -38,6 +38,29 @@ namespace MicroCBuilder.Models
             Id = Guid.NewGuid();
             Items = new ObservableCollection<ChecklistItem>();
         }
+
+        public Checklist Clone()
+        {
+            var ret = new Checklist()
+            {
+                Id = Id,
+                Name = Name,
+                Created = Created,
+                IsFavorited = IsFavorited,
+                UseEncryption = UseEncryption
+            };
+            foreach(var item in Items)
+            {
+                ret.Items.Add(new ChecklistItem()
+                {
+                    Name = item.Name,
+                    Id= item.Id,
+                });
+            }
+
+            return ret;
+        }
+
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 

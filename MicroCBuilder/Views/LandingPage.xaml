@@ -152,7 +152,7 @@
             <!--#endregion-->
 
         </Grid>
-        <Grid Grid.Column="1" Grid.Row="1" Visibility="Collapsed">
+        <Grid Grid.Column="1" Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>

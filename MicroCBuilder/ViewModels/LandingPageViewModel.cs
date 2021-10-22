@@ -38,11 +38,24 @@ namespace MicroCBuilder.ViewModels
             Flares = new ObservableCollection<FlareInfo>();
             ChecklistItems = new ObservableCollection<Checklist>();
 
-            ChecklistFavoriteCache.OnChecklistFavoritesUpdated += (favorites) =>
+            ChecklistFavoriteCache.OnChecklistFavoritesUpdated += async (favorites) =>
             {
                 foreach (var checklist in ChecklistItems)
                 {
                     checklist.IsFavorited = favorites.IsFavorited(checklist);
+                }
+
+                foreach (var fav in favorites.Favorites)
+                {
+                    var existing = ChecklistItems.FirstOrDefault(c => c.Id == fav.Id);
+                    if (existing == null)
+                    {
+                        ChecklistItems.Add(fav.Clone());
+                    }
+                    else
+                    {
+                        await ChecklistFavoriteCache.Current.AddItem(existing);
+                    }
                 }
             };
 
@@ -100,7 +113,7 @@ namespace MicroCBuilder.ViewModels
                         return default;
                     }
                 }).ToList();
-                Console.WriteLine(latestItems);
+
                 var toRemove = ChecklistItems.Where(checklist => !latestItems.Any(c => checklist.Id == c.Id));
                 foreach (var f in toRemove)
                 {
@@ -109,8 +122,13 @@ namespace MicroCBuilder.ViewModels
 
                 foreach (var newChecklist in latestItems)
                 {
+                    if (newChecklist.IsFavorited)
+                    {
+                        await ChecklistFavoriteCache.Current.AddItem(newChecklist);
+                    }
+
                     var existing = ChecklistItems.FirstOrDefault(c => c.Id == newChecklist.Id);
-                    if(existing != null && existing.Created < newChecklist.Created)
+                    if (existing != null && existing.Created < newChecklist.Created)
                     {
                         existing.Created = newChecklist.Created;
                         existing.Items = newChecklist.Items;
@@ -119,6 +137,15 @@ namespace MicroCBuilder.ViewModels
                     else
                     {
                         ChecklistItems.Add(newChecklist);
+                    }
+                }
+
+                var favorites = ChecklistFavoriteCache.Current.Favorites.ToList();
+                foreach(var fav in favorites)
+                {
+                    if(!ChecklistItems.Any( c => c.Id == fav.Id))
+                    {
+                        ChecklistItems.Add(fav.Clone());
                     }
                 }
             });
@@ -193,7 +220,7 @@ namespace MicroCBuilder.ViewModels
             }
         }
 
-        private void AddChecklistFlare(Flare flare)
+        private async void AddChecklistFlare(Flare flare)
         {
             if (flare.Tag != $"micro-c-checklist-{Settings.StoreID()}")
             {
@@ -234,6 +261,11 @@ namespace MicroCBuilder.ViewModels
             }
             newChecklist.Created = flare.Created;
             newChecklist.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(newChecklist) ?? false;
+
+            if (newChecklist.IsFavorited)
+            {
+                await ChecklistFavoriteCache.Current.AddItem(newChecklist);
+            }
 
             var existing = ChecklistItems.FirstOrDefault(c => c.Id == newChecklist.Id);
             if (existing != null && existing.Created < newChecklist.Created)

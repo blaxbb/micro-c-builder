@@ -61,6 +61,11 @@ namespace MicroCBuilder
             var existing = Favorites.FirstOrDefault(c => c.Id == checklist.Id);
             if(existing != null)
             {
+                if(existing.Created <= checklist.Created)
+                {
+                    return;
+                }
+
                 Favorites.Remove(existing);
             }
             Favorites.Add(checklist);
