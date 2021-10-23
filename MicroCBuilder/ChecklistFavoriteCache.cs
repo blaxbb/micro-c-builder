@@ -35,6 +35,7 @@ namespace MicroCBuilder
                     {
                         var text = await Windows.Storage.FileIO.ReadTextAsync(file);
                         Favorites = JsonConvert.DeserializeObject<List<Checklist>>(text);
+                        Favorites.ForEach(f => f.IsFavorited = true);
                         OnChecklistFavoritesUpdated(this);
                         return true;
                     }

@@ -152,7 +152,8 @@
             <!--#endregion-->
 
         </Grid>
-        <Grid Grid.Column="1" Grid.Row="1">
+        <local:ChecklistIndexControl Grid.Column="1" Grid.Row="1"/>
+        <!--<Grid Grid.Column="1" Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -161,7 +162,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <!--#region rightColumn-->
+            --><!--#region rightColumn--><!--
             <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Checklists" VerticalAlignment="Center" FontSize="24" Margin="10,0,0,0"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Grid.Row="0" Grid.Column="1" Spacing="10">
@@ -220,8 +221,8 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <!--#endregion-->
+            --><!--#endregion--><!--
 
-        </Grid>
+        </Grid>-->
     </Grid>
 </Page>

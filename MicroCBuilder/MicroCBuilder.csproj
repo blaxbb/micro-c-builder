@@ -149,6 +149,7 @@
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\BuildComponentControlViewModel.cs" />
     <Compile Include="ViewModels\BuildPageViewModel.cs" />
+    <Compile Include="ViewModels\ChecklistIndexControlViewModel.cs" />
     <Compile Include="ViewModels\ChecklistPageViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
     <Compile Include="ViewModels\SettingsPageViewModel.cs" />
@@ -166,6 +167,9 @@
     </Compile>
     <Compile Include="Views\BuildTemplatePage.xaml.cs">
       <DependentUpon>BuildTemplatePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ChecklistIndexControl.xaml.cs">
+      <DependentUpon>ChecklistIndexControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ChecklistItemEditControl.xaml.cs">
       <DependentUpon>ChecklistItemEditControl.xaml</DependentUpon>
@@ -277,6 +281,10 @@
     <Page Include="Views\BuildTemplatePage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ChecklistIndexControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ChecklistItemEditControl.xaml">
       <SubType>Designer</SubType>

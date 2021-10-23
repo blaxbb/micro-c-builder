@@ -340,7 +340,7 @@ namespace MicroCBuilder.Views
             }
         }
 
-        private void CreateChecklist(Checklist checklist)
+        public void CreateChecklist(Checklist checklist)
         {
             if (Tabs.SelectedIndex >= 0 && Tabs.SelectedIndex < Tabs.TabItems.Count)
             {
@@ -357,7 +357,6 @@ namespace MicroCBuilder.Views
         {
             var page = PushTab<LandingPage>("Micro-C-Builder");
             page.OnCreateBuild += (sender, info) => CreateBuild(info);
-            page.OnCreateChecklist += (sender, checklist) => CreateChecklist(checklist);
         }
 
         private void Tabs_TabCloseRequested(Microsoft.UI.Xaml.Controls.TabView sender, Microsoft.UI.Xaml.Controls.TabViewTabCloseRequestedEventArgs args)

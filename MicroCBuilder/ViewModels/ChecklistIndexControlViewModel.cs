@@ -1,0 +1,116 @@
+﻿using DataFlareClient;
+using MicroCBuilder.Models;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MicroCBuilder.ViewModels
+{
+    public class ChecklistIndexControlViewModel : BaseViewModel
+    {
+        public ObservableCollection<Checklist> Items { get; }
+        public Command UpdateNetworkChecklistFlares { get; }
+        public Command NewChecklistCommand { get; }
+
+        public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
+        public event CreateChecklistEventHandler OnCreateChecklist;
+
+        public ChecklistIndexControlViewModel()
+        {
+            Items = new ObservableCollection<Checklist>();
+
+            ChecklistFavoriteCache.OnChecklistFavoritesUpdated += async (favorites) =>
+            {
+                foreach (var checklist in Items)
+                {
+                    checklist.IsFavorited = favorites.IsFavorited(checklist);
+                }
+
+                SetFavorites(favorites.Favorites);
+            };
+
+            UpdateNetworkChecklistFlares = new Command(async (o) =>
+            {
+                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklist-{Settings.StoreID()}");
+                await ProcessFlares(flares);
+
+            });
+            UpdateNetworkChecklistFlares.Execute(null);
+
+            NewChecklistCommand = new Command((o) =>
+            {
+                OnCreateChecklist?.Invoke(this, new Checklist());
+            });
+
+            FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");
+            var dispatcher = Windows.UI.Xaml.Window.Current.Dispatcher;
+            FlareHubManager.OnFlareReceived += async (flare) =>
+            {
+                await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                {
+                    await ProcessFlares(new List<Flare>() { flare });
+                });
+            };
+        }
+
+        private async Task ProcessFlares(List<Flare> flares)
+        {
+            var sharedPassword = Settings.SharedPassword();
+            var aesInfo = AesInfo.FromPassword(sharedPassword);
+            var checklists = flares.Select(f =>
+            {
+                try
+                {
+                    var checklist = f.TryDecrypt<Checklist>(aesInfo);
+                    checklist.data.Created = f.Created;
+                    checklist.data.UseEncryption = checklist.encrypted;
+                    checklist.data.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(checklist.data) ?? false;
+                    return checklist.data;
+                }
+                catch (Exception e)
+                {
+                    return default;
+                }
+            }).ToList();
+
+            foreach (var newChecklist in checklists)
+            {
+                if (newChecklist.IsFavorited)
+                {
+                    await ChecklistFavoriteCache.Current.AddItem(newChecklist);
+                }
+
+                var existing = Items.FirstOrDefault(c => c.Id == newChecklist.Id);
+                if (existing != null)
+                {
+                    if (existing.Created < newChecklist.Created)
+                    {
+                        var index = Items.IndexOf(existing);
+                        Items.Remove(existing);
+                        Items.Insert(index, newChecklist);
+                    }
+                    }
+                    else
+                {
+                    Items.Add(newChecklist);
+                }
+            }
+
+            SetFavorites(ChecklistFavoriteCache.Current.Favorites.ToList());
+        }
+
+        private void SetFavorites(List<Checklist> favorites)
+        {
+            foreach (var fav in favorites)
+            {
+                if (!Items.Any(c => c.Id == fav.Id))
+                {
+                    Items.Add(fav.Clone());
+                }
+            }
+        }
+    }
+}

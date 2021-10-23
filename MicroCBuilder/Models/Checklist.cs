@@ -61,6 +61,39 @@ namespace MicroCBuilder.Models
             return ret;
         }
 
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Checklist checklist)
+            {
+                var eq = Id.Equals(checklist.Id) &&
+                       Items.Count == checklist.Items.Count &&
+                       Name == checklist.Name;
+
+                if (!eq)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < Items.Count; i++)
+                {
+                    var a = Items[i];
+                    var b = checklist.Items[i];
+                    if (a.Id == b.Id &&
+                        a.Name == b.Name &&
+                        a.Assigned == b.Assigned &&
+                        a.Complete == b.Complete)
+                    {
+                        continue;
+                    }
+                    return false;
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -83,6 +116,7 @@ namespace MicroCBuilder.Models
             OnPropertyChanged(propertyName);
             return true;
         }
+
         #endregion
     }
 }

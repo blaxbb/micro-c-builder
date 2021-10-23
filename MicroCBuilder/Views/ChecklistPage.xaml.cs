@@ -61,22 +61,5 @@ namespace MicroCBuilder.Views
                 }
             }
         }
-
-        private void FavoriteChecklistClick(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button b && b.DataContext is Checklist checklist)
-            {
-                if (checklist.IsFavorited)
-                {
-                    ChecklistFavoriteCache.Current?.RemoveItem(checklist);
-                    checklist.IsFavorited = false;
-                }
-                else
-                {
-                    ChecklistFavoriteCache.Current?.AddItem(checklist);
-                    checklist.IsFavorited = true;
-                }
-            }
-        }
     }
 }

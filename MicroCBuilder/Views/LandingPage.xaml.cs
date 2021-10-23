@@ -32,9 +32,6 @@ namespace MicroCBuilder.Views
         public delegate void CreateBuildEventHandler(object sender, BuildInfo info);
         public event CreateBuildEventHandler OnCreateBuild;
 
-        public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
-        public event CreateChecklistEventHandler OnCreateChecklist;
-
         string[] files = new string[]
         {
                 "TIER_5",
@@ -51,7 +48,6 @@ namespace MicroCBuilder.Views
             if (DataContext is LandingPageViewModel vm)
             {
                 vm.OnCreateBuild += CreateBuild;
-                vm.OnCreateChecklist += CreateChecklist;
                 //TimeSpan period = TimeSpan.FromSeconds(30);
 
                 //ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
@@ -98,11 +94,6 @@ namespace MicroCBuilder.Views
             }
         }
 
-        private void CreateChecklist(object sender, Checklist checklist)
-        {
-            OnCreateChecklist?.Invoke(this, checklist);
-        }
-
         private void FlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             if(e.OriginalSource is FrameworkElement ele && ele.DataContext is FlareInfo info)
@@ -112,31 +103,6 @@ namespace MicroCBuilder.Views
                     Name = info.Flare.Title,
                     Components = info.Components
                 });
-            }
-        }
-
-        private void ChecklistFlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            if (e.OriginalSource is FrameworkElement ele && ele.DataContext is Checklist checklist)
-            {
-                CreateChecklist(sender, checklist);
-            }
-        }
-
-        private void FavoriteChecklistClick(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button b && b.DataContext is Checklist checklist)
-            {
-                if (checklist.IsFavorited)
-                {
-                    ChecklistFavoriteCache.Current?.RemoveItem(checklist);
-                    checklist.IsFavorited = false;
-                }
-                else
-                {
-                    ChecklistFavoriteCache.Current?.AddItem(checklist);
-                    checklist.IsFavorited = true;
-                }
             }
         }
     }
