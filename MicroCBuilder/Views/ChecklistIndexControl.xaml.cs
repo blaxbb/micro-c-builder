@@ -15,6 +15,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.UI;
 using MicroCBuilder.ViewModels;
+using System.Threading;
+using System.Threading.Tasks;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -24,13 +26,29 @@ namespace MicroCBuilder.Views
     {
         public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
         public event CreateChecklistEventHandler OnCreateChecklist;
+        private CancellationTokenSource tokenSource;
 
         public ChecklistIndexControl()
         {
+            tokenSource = new CancellationTokenSource();
+
             this.InitializeComponent();
+            this.Unloaded += (sender, args) => {
+                tokenSource.Cancel();
+            };
+
             if(DataContext is ChecklistIndexControlViewModel vm)
             {
                 vm.OnCreateChecklist += CreateChecklist;
+                var token = tokenSource.Token;
+                Task.Run(async () =>
+                {
+                    while (!tokenSource.IsCancellationRequested)
+                    {
+                        await Task.Delay(60 * 1000);
+                        vm.CleanOldEntries();
+                    }
+                }, token);
             }
         }
 

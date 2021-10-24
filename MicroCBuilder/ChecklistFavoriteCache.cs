@@ -35,7 +35,11 @@ namespace MicroCBuilder
                     {
                         var text = await Windows.Storage.FileIO.ReadTextAsync(file);
                         Favorites = JsonConvert.DeserializeObject<List<Checklist>>(text);
-                        Favorites.ForEach(f => f.IsFavorited = true);
+                        Favorites.ForEach(f =>
+                        {
+                            f.IsFavorited = true;
+                            f.Created = DateTime.Now;
+                        });
                         OnChecklistFavoritesUpdated(this);
                         return true;
                     }
@@ -62,7 +66,7 @@ namespace MicroCBuilder
             var existing = Favorites.FirstOrDefault(c => c.Id == checklist.Id);
             if(existing != null)
             {
-                if(existing.Created <= checklist.Created)
+                if(existing.Created >= checklist.Created)
                 {
                     return;
                 }

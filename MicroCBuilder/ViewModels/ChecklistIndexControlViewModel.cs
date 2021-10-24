@@ -78,6 +78,10 @@ namespace MicroCBuilder.ViewModels
 
             foreach (var newChecklist in checklists)
             {
+                if(newChecklist.Created.DayOfYear != DateTime.Now.DayOfYear)
+                {
+                    continue;
+                }
                 if (newChecklist.IsFavorited)
                 {
                     await ChecklistFavoriteCache.Current.AddItem(newChecklist);
@@ -92,8 +96,8 @@ namespace MicroCBuilder.ViewModels
                         Items.Remove(existing);
                         Items.Insert(index, newChecklist);
                     }
-                    }
-                    else
+                }
+                else
                 {
                     Items.Add(newChecklist);
                 }
@@ -111,6 +115,13 @@ namespace MicroCBuilder.ViewModels
                     Items.Add(fav.Clone());
                 }
             }
+        }
+
+        public void CleanOldEntries()
+        {
+            var toRemove = Items?.Where(i => i.Created.DayOfYear != DateTime.Now.DayOfYear).ToList();
+            toRemove.ForEach(i => Items.Remove(i));
+            SetFavorites(ChecklistFavoriteCache.Current.Favorites.ToList());
         }
     }
 }
