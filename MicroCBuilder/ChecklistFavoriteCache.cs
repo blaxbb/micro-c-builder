@@ -38,9 +38,9 @@ namespace MicroCBuilder
                         Favorites.ForEach(f =>
                         {
                             f.IsFavorited = true;
-                            f.Created = DateTime.Now;
+                            f.Created = DateTime.Today;
                         });
-                        OnChecklistFavoritesUpdated(this);
+                        OnChecklistFavoritesUpdated?.Invoke(this);
                         return true;
                     }
                 }
