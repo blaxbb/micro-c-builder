@@ -19,6 +19,7 @@ namespace MicroCBuilder.ViewModels
 
         public Checklist Checklist { get => checklist; set { checklist?.Items.ToList().ForEach(c => c.PropertyChanged -= Item_PropertyChanged); SetProperty(ref checklist, value); checklist?.Items.ToList().ForEach(c => c.PropertyChanged += Item_PropertyChanged); } }
         public Command<ChecklistItem> EditItemCommand { get; }
+        public Command<ChecklistItem> DeleteItemCommand { get; }
 
         Dictionary<string, DateTime> AssignedUpdatedTimes { get; }
 
@@ -32,6 +33,12 @@ namespace MicroCBuilder.ViewModels
             EditItemCommand = new Command<ChecklistItem>(async (item) =>
             {
                 item = await ShowEditItemDialog(item);
+            });
+
+            DeleteItemCommand = new Command<ChecklistItem>(async (item) =>
+            {
+                Checklist?.Items.Remove(item);
+                await AutoExport(Checklist.UseEncryption);
             });
 
             FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");

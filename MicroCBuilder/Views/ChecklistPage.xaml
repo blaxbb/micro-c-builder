@@ -41,6 +41,7 @@
                                 <Grid.ContextFlyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem Text="Edit" Icon="Edit" Command="{Binding DataContext.EditItemCommand, ElementName=page}" CommandParameter="{Binding }"/>
+                                        <MenuFlyoutItem Text="Delete" Icon="Delete" Command="{Binding DataContext.DeleteItemCommand, ElementName=page}" CommandParameter="{Binding }"/>
                                     </MenuFlyout>
                                 </Grid.ContextFlyout>
                                 <Grid.ColumnDefinitions>
