@@ -42,7 +42,11 @@ namespace MicroCBuilder.ViewModels
 
             NewChecklistCommand = new Command((o) =>
             {
-                OnCreateChecklist?.Invoke(this, new Checklist());
+                var encrypted = !string.IsNullOrWhiteSpace(Settings.SharedPassword());
+                OnCreateChecklist?.Invoke(this, new Checklist()
+                {
+                    UseEncryption = encrypted
+                });
             });
 
             FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");
