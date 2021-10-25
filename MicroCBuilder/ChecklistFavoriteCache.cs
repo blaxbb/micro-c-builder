@@ -73,7 +73,8 @@ namespace MicroCBuilder
 
                 Favorites.Remove(existing);
             }
-            Favorites.Add(checklist);
+
+            Favorites.Add(checklist.Clone());
             await SaveCache();
         }
 

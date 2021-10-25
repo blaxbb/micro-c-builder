@@ -45,8 +45,8 @@ namespace MicroCBuilder.Views
                 {
                     while (!tokenSource.IsCancellationRequested)
                     {
-                        vm.CleanOldEntries();
                         await Task.Delay(60 * 1000);
+                        vm.CleanOldEntries();
                     }
                 }, token);
             }

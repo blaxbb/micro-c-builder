@@ -90,7 +90,7 @@ namespace MicroCBuilder.ViewModels
                 var existing = Items.FirstOrDefault(c => c.Id == newChecklist.Id);
                 if (existing != null)
                 {
-                    if (existing.Created < newChecklist.Created)
+                    if (existing.Created <= newChecklist.Created)
                     {
                         var index = Items.IndexOf(existing);
                         Items.Remove(existing);
