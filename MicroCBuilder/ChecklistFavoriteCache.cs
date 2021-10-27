@@ -56,9 +56,17 @@ namespace MicroCBuilder
         public async Task SaveCache()
         {
             OnChecklistFavoritesUpdated(this);
-            var json = System.Text.Json.JsonSerializer.Serialize(Favorites, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
-            var file = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(FILENAME, Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            await Windows.Storage.FileIO.WriteTextAsync(file, json);
+
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(Favorites, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
+                var file = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(FILENAME, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+                await Windows.Storage.FileIO.WriteTextAsync(file, json);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         public async Task AddItem(Checklist checklist)

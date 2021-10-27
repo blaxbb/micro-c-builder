@@ -82,7 +82,7 @@ namespace MicroCBuilder.ViewModels
 
             foreach (var newChecklist in checklists)
             {
-                if(newChecklist.Created.DayOfYear != DateTime.Now.DayOfYear)
+                if(newChecklist == null || newChecklist.Created.DayOfYear != DateTime.Now.DayOfYear)
                 {
                     continue;
                 }
@@ -103,11 +103,11 @@ namespace MicroCBuilder.ViewModels
                 }
                 else
                 {
-                    Items.Add(newChecklist);
+                    Items?.Add(newChecklist);
                 }
             }
 
-            SetFavorites(ChecklistFavoriteCache.Current.Favorites.ToList());
+            SetFavorites(ChecklistFavoriteCache.Current?.Favorites?.ToList());
         }
 
         private void SetFavorites(List<Checklist> favorites)
