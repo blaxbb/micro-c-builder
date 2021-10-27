@@ -91,15 +91,19 @@ namespace MicroCBuilder.Views
             var grid = new Grid();
             grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
 
             var cb = new CheckBox() { Content = "Export to MCOL" };
+            var cbFooter = new CheckBox() { Content = "Include Footer", IsChecked = true };
             var tb = new TextBox() { PlaceholderText = "Sales ID" };
 
             grid.Children.Add(cb);
+            grid.Children.Add(cbFooter);
             grid.Children.Add(tb);
 
             Grid.SetRow(cb, 0);
-            Grid.SetRow(tb, 1);
+            Grid.SetRow(cbFooter, 1);
+            Grid.SetRow(tb, 2);
 
             var dialog = new ContentDialog()
             {
@@ -114,11 +118,11 @@ namespace MicroCBuilder.Views
             var doExport = cb.IsChecked;
             if (result != ContentDialogResult.Secondary)
             {
-                await DoPrintQuote(vm.Components.ToList(), name, doExport ?? false);
+                await DoPrintQuote(vm.Components.ToList(), name, doExport ?? false, cbFooter.IsChecked ?? false);
             }
         }
 
-        public static async Task DoPrintQuote(List<BuildComponent> Components, string salesID = "", bool exportToMCOL = false)
+        public static async Task DoPrintQuote(List<BuildComponent> Components, string salesID = "", bool exportToMCOL = false, bool includeFooter = false)
         {
             var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
@@ -128,7 +132,7 @@ namespace MicroCBuilder.Views
 
             MainPage.PrintHelper_Initialize();
 
-            const int ITEMS_PER_PAGE = 12;
+            int ITEMS_PER_PAGE = includeFooter ? 12 : 13;
             
             for(int i = 0; i < itemsCount; i += ITEMS_PER_PAGE)
             {
@@ -164,17 +168,20 @@ namespace MicroCBuilder.Views
 
                 float SubTotal = Components.Where(c => c?.Item != null).Sum(c => c.Item.Price * c.Item.Quantity);
 
-                var footer = new BuildSummaryControl
+                if (includeFooter)
                 {
-                    SubTotal = SubTotal,
-                    MCOLUrl = buildContext.TinyBuildURL
-                };
+                    var footer = new BuildSummaryControl
+                    {
+                        SubTotal = SubTotal,
+                        MCOLUrl = buildContext.TinyBuildURL
+                    };
 
+                    page.Children.Add(footer);
+                    Grid.SetRow(footer, 2);
+                }
                 page.Children.Add(header);
-                page.Children.Add(footer);
 
                 Grid.SetRow(header, 0);
-                Grid.SetRow(footer, 2);
 
                 page.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
                 page.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) });
