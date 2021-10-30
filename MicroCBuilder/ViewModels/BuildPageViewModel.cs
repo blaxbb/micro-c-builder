@@ -123,18 +123,27 @@ namespace MicroCBuilder.ViewModels
             AddCustomItem = new Command(DoAddCustomItem);
             ExportToWeb = new Command(DoExportToWeb);
             ImportFromWeb = new Command(DoImportFromWeb);
-            UpdatePricing = new Command(DoUpdatePricing);
+            UpdatePricing = new Command(async (_) => await DoUpdatePricing(_));
         }
 
-        private void DoUpdatePricing(object obj)
+        private async Task DoUpdatePricing(object obj)
         {
             foreach(var comp in Components.Where(c => c.Item != null))
             {
                 var item = BuildComponentCache.Current.FindItemBySKU(comp.Item.SKU);
+                if(item == null)
+                {
+                    var items = await Search.LoadEnhanced(comp.Item.SKU, Settings.StoreID(), "");
+                    if(items.Items.Count == 1)
+                    {
+                        item = items.Items[0];
+                    }
+                }
                 if(item != null) {
                     var qty = comp.Item.Quantity;
                     comp.Item = item.CloneAndResetQuantity();
                     comp.Item.Quantity = qty;
+                    OnPropertyChanged(nameof(SubTotal));
                 }
             }
         }
