@@ -16,6 +16,7 @@
                     <converters:StringCSVConverter x:Key="StringCSVConverter"/>
                     <converters:FocusVisibilityConverter x:Key="ShowIfPasswordRevealed"/>
                     <converters:FocusVisibilityConverter x:Key="HideIfPasswordRevealed" ShowWhenFocused="False"/>
+                    <converters:StringFormatConverter x:Key="ShortDateTimeFormat" Format="{}{0:MM/dd/yy hh:mm}"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

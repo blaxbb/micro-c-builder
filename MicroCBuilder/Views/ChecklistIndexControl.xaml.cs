@@ -35,6 +35,10 @@ namespace MicroCBuilder.Views
             this.InitializeComponent();
             this.Unloaded += (sender, args) => {
                 tokenSource.Cancel();
+                if (DataContext is ChecklistIndexControlViewModel vm)
+                {
+                    vm.Unloaded();
+                }
             };
 
             if(DataContext is ChecklistIndexControlViewModel vm)

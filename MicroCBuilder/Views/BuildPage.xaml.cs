@@ -483,9 +483,13 @@ namespace MicroCBuilder.Views
 
             var cb = new CheckBox() { Content = "Split page", IsChecked = true };
             var buildTechTextBox = new TextBox() { PlaceholderText = "Build Tech" };
+            var name = new TextBox() { PlaceholderText = "Title" };
+            var author = new TextBox() { PlaceholderText = "Author" };
             var extraTextBox = new TextBox() { PlaceholderText = "Annotation" };
 
             stack.Children.Add(cb);
+            stack.Children.Add(name);
+            stack.Children.Add(author);
             stack.Children.Add(buildTechTextBox);
             stack.Children.Add(extraTextBox);
 
@@ -498,7 +502,7 @@ namespace MicroCBuilder.Views
             };
             var result = await dialog.ShowAsync();
             var doSplit = cb.IsChecked ?? false;
-            if (result != ContentDialogResult.Secondary)
+            if (result == ContentDialogResult.Primary)
             {
                 List<string> extraStrings = new List<string>();
 
@@ -511,11 +515,11 @@ namespace MicroCBuilder.Views
                     extraStrings.Add(extraTextBox.Text);
                 }
                 
-                await DoPrintPromo(vm.Components.ToList(), extraStrings, doSplit);
+                await DoPrintPromo(vm.Components.ToList(), extraStrings, name.Text, author.Text, doSplit);
             }
         }
 
-        public static async Task DoPrintPromo(List<BuildComponent> Components, List<string> extraStrings, bool IsSplit)
+        public static async Task DoPrintPromo(List<BuildComponent> Components, List<string> extraStrings, string name, string author, bool IsSplit)
         {
             var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
@@ -811,6 +815,7 @@ namespace MicroCBuilder.Views
                 Orientation = Windows.Graphics.Printing.PrintOrientation.Portrait
             };
 
+            await BuildLibrary.SaveNew(Components, name, author);
             await MainPage.PrintHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
         }
 

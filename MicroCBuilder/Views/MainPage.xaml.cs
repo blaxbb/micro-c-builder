@@ -322,7 +322,7 @@ namespace MicroCBuilder.Views
             return (T)frame.Content;
         }
 
-        private void CreateBuild(BuildInfo info)
+        public void CreateBuild(BuildInfo info)
         {
             if(info.Components == null)
             {
@@ -364,7 +364,7 @@ namespace MicroCBuilder.Views
             sender.TabItems.Remove(args.Tab);
         }
 
-        private async void LoadClicked(object sender, RoutedEventArgs e)
+        private async void LoadClicked(object sender, RoutedEventArgs args)
         {
             FileOpenPicker openPicker = new FileOpenPicker
             {
@@ -373,13 +373,35 @@ namespace MicroCBuilder.Views
             };
 
             openPicker.FileTypeFilter.Add(".build");
-            try
+            StorageFile file = await openPicker.PickSingleFileAsync();
+            if (file != null)
             {
-                StorageFile file = await openPicker.PickSingleFileAsync();
-                if (file != null)
+                List<BuildComponent> components = null;
+                try
                 {
                     var text = await Windows.Storage.FileIO.ReadTextAsync(file);
-                    var components = System.Text.Json.JsonSerializer.Deserialize<List<BuildComponent>>(text);
+                    components = System.Text.Json.JsonSerializer.Deserialize<List<BuildComponent>>(text);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
+
+                if (components == null)
+                {
+                    try
+                    {
+                        var text = await Windows.Storage.FileIO.ReadTextAsync(file);
+                        var list = System.Text.Json.JsonSerializer.Deserialize<ProductList>(text);
+                        components = list.Components;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e.Message);
+                    }
+                }
+                if (components != null)
+                {
 
                     if (CurrentTabContent is LandingPage)
                     {
@@ -391,12 +413,8 @@ namespace MicroCBuilder.Views
                     {
                         vm.InsertComponents(components);
                     }
-
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
+
             }
         }
 

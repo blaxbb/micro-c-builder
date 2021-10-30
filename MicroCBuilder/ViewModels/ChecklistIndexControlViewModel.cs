@@ -18,8 +18,11 @@ namespace MicroCBuilder.ViewModels
         public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
         public event CreateChecklistEventHandler OnCreateChecklist;
 
+        static Windows.UI.Core.CoreDispatcher dispatcher;
+
         public ChecklistIndexControlViewModel()
         {
+            dispatcher = Windows.UI.Xaml.Window.Current.Dispatcher;
             Items = new ObservableCollection<Checklist>();
 
             ChecklistFavoriteCache.OnChecklistFavoritesUpdated += async (favorites) =>
@@ -35,7 +38,10 @@ namespace MicroCBuilder.ViewModels
             UpdateNetworkChecklistFlares = new Command(async (o) =>
             {
                 var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklist-{Settings.StoreID()}");
-                await ProcessFlares(flares);
+                if (flares.Count > 0)
+                {
+                    await ProcessFlares(flares);
+                }
 
             });
             UpdateNetworkChecklistFlares.Execute(null);
@@ -50,14 +56,20 @@ namespace MicroCBuilder.ViewModels
             });
 
             FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");
-            var dispatcher = Windows.UI.Xaml.Window.Current.Dispatcher;
-            FlareHubManager.OnFlareReceived += async (flare) =>
+            FlareHubManager.OnFlareReceived += ProcessFlareFromThread;
+        }
+
+        internal void Unloaded()
+        {
+            FlareHubManager.OnFlareReceived -= ProcessFlareFromThread;
+        }
+
+        private async void ProcessFlareFromThread(Flare flare)
+        {
+            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-                {
-                    await ProcessFlares(new List<Flare>() { flare });
-                });
-            };
+                await ProcessFlares(new List<Flare>() { flare });
+            });
         }
 
         private async Task ProcessFlares(List<Flare> flares)

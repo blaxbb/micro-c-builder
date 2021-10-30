@@ -24,6 +24,7 @@ using Microsoft.Toolkit.Uwp.Helpers;
 using Windows.UI.Xaml.Media;
 using Windows.Web.Http;
 using static MicroCLib.Models.BuildComponent;
+using MicroCBuilder.Models;
 
 namespace MicroCBuilder.ViewModels
 {
@@ -31,7 +32,6 @@ namespace MicroCBuilder.ViewModels
     {
         private BuildComponent selectedItem;
 
-        public string Test { get; set; } = "AFASFSF";
         public ObservableCollection<BuildComponent> Components { get; }
 
         private string query;
@@ -40,7 +40,6 @@ namespace MicroCBuilder.ViewModels
 
         public ICommand Save { get; }
         public ICommand SaveSigns { get; }
-        public ICommand Load { get; }
         public ICommand Reset { get; }
         public ICommand Add { get; }
         public ICommand Remove { get; }
@@ -81,8 +80,6 @@ namespace MicroCBuilder.ViewModels
 
             Save = new Command(DoSave);
             SaveSigns = new Command(async (o) => DoSaveSigns(Components.ToList()));
-
-            Load = new Command(DoLoad);
 
             Reset = new Command(DoReset);
 
@@ -610,38 +607,6 @@ namespace MicroCBuilder.ViewModels
             UpdateHintsAndErrors();
         }
 
-        private async void DoLoad(object obj)
-        {
-            //
-            //Get a collection of BuildComponents from a .build file
-            //
-            FileOpenPicker openPicker = new FileOpenPicker
-            {
-                ViewMode = PickerViewMode.Thumbnail,
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-
-            openPicker.FileTypeFilter.Add(".build");
-            StorageFile file = await openPicker.PickSingleFileAsync();
-            if (file != null)
-            {
-                DoReset(obj);
-                var text = await Windows.Storage.FileIO.ReadTextAsync(file);
-                var components = System.Text.Json.JsonSerializer.Deserialize<List<BuildComponent>>(text);
-
-                //
-                //If there is an existing empty component, use that one, otherwise create a new one
-                //
-                InsertComponents(components);
-            }
-            else
-            {
-                Debug.WriteLine("Operation cancelled.");
-            }
-
-            UpdateHintsAndErrors();
-        }
-
         public void InsertComponents(List<BuildComponent> fromFile)
         {
             foreach (var loadedComp in fromFile)
@@ -674,12 +639,44 @@ namespace MicroCBuilder.ViewModels
 
         private async void DoSave(object obj)
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(Components.Where(c => c.Item != null), new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
-
-            var savePicker = new Windows.Storage.Pickers.FileSavePicker
+            var stack = new StackPanel()
             {
-                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary,
-                SuggestedFileName = "New Build"
+                Orientation = Orientation.Vertical,
+                Spacing = 10
+            };
+
+            var authorTb = new TextBox() { PlaceholderText = "Author (Optional)" };
+            var nameTb = new TextBox() { PlaceholderText = "File name" };
+
+            stack.Children.Add(nameTb);
+            stack.Children.Add(authorTb);
+
+            var dialog = new ContentDialog()
+            {
+                Title = "Save Signs",
+                Content = stack,
+                PrimaryButtonText = "Save",
+                SecondaryButtonText = "Cancel"
+            };
+
+        showDialog:
+            var result = await dialog.ShowAsync();
+
+            if (result != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nameTb.Text))
+            {
+                goto showDialog;
+            }
+
+
+            var savePicker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = nameTb.Text
             };
 
             // Dropdown of file types the user can save the file as
@@ -691,14 +688,25 @@ namespace MicroCBuilder.ViewModels
             {
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
-                Windows.Storage.CachedFileManager.DeferUpdates(file);
+                CachedFileManager.DeferUpdates(file);
+
+
                 // write to file
-                await Windows.Storage.FileIO.WriteTextAsync(file, json);
+                var list = new ProductList(Components.Where(c => c.Item != null).ToList())
+                {
+                    Name = nameTb.Text,
+                    Author = string.IsNullOrWhiteSpace(authorTb.Text) ? null : authorTb.Text
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(list, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
+                await FileIO.WriteTextAsync(file, json);
+                await BuildLibrary.RegisterLibraryEntry(file.Path);
+
                 // Let Windows know that we're finished changing the file so
                 // the other app can update the remote version of the file.
                 // Completing updates may require Windows to ask for user input.
                 Windows.Storage.Provider.FileUpdateStatus status =
-                    await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+                    await CachedFileManager.CompleteUpdatesAsync(file);
                 if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
                 {
                     Debug.WriteLine("File " + file.Name + " was saved.");

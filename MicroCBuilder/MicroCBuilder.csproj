@@ -129,6 +129,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="BuildComponentCache.cs" />
+    <Compile Include="BuildLibrary.cs" />
     <Compile Include="ChecklistFavoriteCache.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Converters\NullVisibilityConverter.cs" />
@@ -142,12 +143,14 @@
     <Compile Include="MCOLBuildContext.cs" />
     <Compile Include="Models\Checklist.cs" />
     <Compile Include="Models\ChecklistItem.cs" />
+    <Compile Include="Models\ProductList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SignPublisher.cs" />
     <Compile Include="TimeSpanRollingAverage.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\BuildComponentControlViewModel.cs" />
+    <Compile Include="ViewModels\BuildLibraryControlViewModel.cs" />
     <Compile Include="ViewModels\BuildPageViewModel.cs" />
     <Compile Include="ViewModels\ChecklistIndexControlViewModel.cs" />
     <Compile Include="ViewModels\ChecklistPageViewModel.cs" />
@@ -158,6 +161,9 @@
     </Compile>
     <Compile Include="Views\BuildComponentControl.xaml.cs">
       <DependentUpon>BuildComponentControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\BuildLibraryControl.xaml.cs">
+      <DependentUpon>BuildLibraryControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\BuildPage.xaml.cs">
       <DependentUpon>BuildPage.xaml</DependentUpon>
@@ -269,6 +275,10 @@
     <Page Include="Views\BuildComponentControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\BuildLibraryControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\BuildPage.xaml">
       <Generator>MSBuild:Compile</Generator>
