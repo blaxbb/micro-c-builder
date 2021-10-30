@@ -14,7 +14,7 @@ namespace MicroCBuilder.ViewModels
         public Command<string> NewBuildCommand { get; }
         public ObservableCollection<BuildInfo> BuildTemplates { get; }
 
-        public delegate void CreateBuildEventHandler(object sender, BuildInfo name);
+        public delegate void CreateBuildEventHandler(object sender, ProductList list);
         public event CreateBuildEventHandler OnCreateBuild;
 
         public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
@@ -129,9 +129,14 @@ namespace MicroCBuilder.ViewModels
             }
         }
 
-        private BuildInfo GetInfo(string name)
+        private ProductList GetInfo(string name)
         {
-            return BuildTemplates.FirstOrDefault(b => b.Name == name);
+            var template = BuildTemplates.FirstOrDefault(b => b.Name == name);
+            return new ProductList()
+            {
+                Name = template.Name,
+                Components = template.Components,
+            };
         }
     }
 

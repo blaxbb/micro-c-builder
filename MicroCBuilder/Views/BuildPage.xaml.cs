@@ -88,6 +88,11 @@ namespace MicroCBuilder.Views
 
         public async Task PrintClicked()
         {
+            if(vm.Components.Count(c => c.Item != null) == 0)
+            {
+                return;
+            }
+
             var grid = new Grid();
             grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
@@ -95,15 +100,15 @@ namespace MicroCBuilder.Views
 
             var cb = new CheckBox() { Content = "Export to MCOL" };
             var cbFooter = new CheckBox() { Content = "Include Footer", IsChecked = true };
-            var tb = new TextBox() { PlaceholderText = "Sales ID" };
+            var salesIdTb = new TextBox() { PlaceholderText = "Sales ID" };
 
             grid.Children.Add(cb);
             grid.Children.Add(cbFooter);
-            grid.Children.Add(tb);
+            grid.Children.Add(salesIdTb);
 
             Grid.SetRow(cb, 0);
             Grid.SetRow(cbFooter, 1);
-            Grid.SetRow(tb, 2);
+            Grid.SetRow(salesIdTb, 2);
 
             var dialog = new ContentDialog()
             {
@@ -112,13 +117,26 @@ namespace MicroCBuilder.Views
                 PrimaryButtonText = "Print",
                 SecondaryButtonText = "Cancel"
             };
-            tb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
+            salesIdTb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
             var result = await dialog.ShowAsync();
-            var name = tb.Text;
+            var name = salesIdTb.Text;
             var doExport = cb.IsChecked;
             if (result != ContentDialogResult.Secondary)
             {
+                if (!string.IsNullOrWhiteSpace(salesIdTb.Text))
+                {
+                    if (vm.LibraryGuid != default)
+                    {
+                        await BuildLibrary.SaveExisting(vm.LibraryGuid, vm.Components.ToList(), author: salesIdTb.Text);
+                    }
+                    else
+                    {
+                        var list = await BuildLibrary.SaveNew(vm.Components.ToList(), $"Customer Quote", salesIdTb.Text);
+                        vm.LibraryGuid = list.Guid;
+                    }                    
+                }
                 await DoPrintQuote(vm.Components.ToList(), name, doExport ?? false, cbFooter.IsChecked ?? false);
+
             }
         }
 
@@ -490,12 +508,10 @@ namespace MicroCBuilder.Views
 
             var cb = new CheckBox() { Content = "Split page", IsChecked = true };
             var buildTechTextBox = new TextBox() { PlaceholderText = "Build Tech" };
-            var name = new TextBox() { PlaceholderText = "Title" };
             var author = new TextBox() { PlaceholderText = "Author" };
             var extraTextBox = new TextBox() { PlaceholderText = "Annotation" };
 
             stack.Children.Add(cb);
-            stack.Children.Add(name);
             stack.Children.Add(author);
             stack.Children.Add(buildTechTextBox);
             stack.Children.Add(extraTextBox);
@@ -522,11 +538,21 @@ namespace MicroCBuilder.Views
                     extraStrings.Add(extraTextBox.Text);
                 }
                 
-                await DoPrintPromo(vm.Components.ToList(), extraStrings, name.Text, author.Text, doSplit);
+                await DoPrintPromo(vm.Components.ToList(), extraStrings, doSplit);
+
+                if (vm.LibraryGuid != default)
+                {
+                    await BuildLibrary.SaveExisting(vm.LibraryGuid, vm.Components.ToList(), author: author.Text);
+                }
+                else
+                {
+                    var list = await BuildLibrary.SaveNew(vm.Components.ToList(), "Promo", author.Text);
+                    vm.LibraryGuid = list.Guid;
+                }
             }
         }
 
-        public static async Task DoPrintPromo(List<BuildComponent> Components, List<string> extraStrings, string name, string author, bool IsSplit)
+        public static async Task DoPrintPromo(List<BuildComponent> Components, List<string> extraStrings, bool IsSplit)
         {
             var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
@@ -822,7 +848,6 @@ namespace MicroCBuilder.Views
                 Orientation = Windows.Graphics.Printing.PrintOrientation.Portrait
             };
 
-            await BuildLibrary.SaveNew(Components, name, author);
             await MainPage.PrintHelper.ShowPrintUIAsync("Print Quote", printHelperOptions);
         }
 

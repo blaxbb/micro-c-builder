@@ -50,22 +50,34 @@ namespace MicroCBuilder
         public static async Task<List<ProductList>> GetLibrary()
         {
             var ret = new List<ProductList>();
+            var pathsToRemove = new List<string>();
             var paths = await GetSavedPaths();
+
             foreach(var path in paths)
             {
                 ProductList list = null;
                 try
                 {
-                    var file = await StorageFile.GetFileFromPathAsync(path);
-                    var json = await FileIO.ReadTextAsync(file);
+                    var productFile = await StorageFile.GetFileFromPathAsync(path);
+                    var json = await FileIO.ReadTextAsync(productFile);
 
                     ret.Add(JsonConvert.DeserializeObject<ProductList>(json));
+                }
+                catch (FileNotFoundException e)
+                {
+                    pathsToRemove.Add(path);
                 }
                 catch(Exception e)
                 {
                     Console.WriteLine(e.Message);
                 }
             }
+
+            pathsToRemove.ForEach(p => paths.Remove(p));
+
+            var folder = await LibraryFolder();
+            var file = await folder.CreateFileAsync("saved.json", CreationCollisionOption.OpenIfExists);
+            await FileIO.WriteTextAsync(file, JsonConvert.SerializeObject(paths, Formatting.Indented));
 
             return ret;
         }
@@ -94,6 +106,11 @@ namespace MicroCBuilder
 
         public static async Task RemoveLibraryEntry(ProductList toRemove)
         {
+            await RemoveLibraryEntry(toRemove.Guid);
+        }
+
+        public static async Task RemoveLibraryEntry(Guid toRemove)
+        {
             try
             {
                 var paths = await GetSavedPaths();
@@ -106,10 +123,14 @@ namespace MicroCBuilder
                         var json = await FileIO.ReadTextAsync(productFile);
 
                         var list = JsonConvert.DeserializeObject<ProductList>(json);
-                        if(list.Guid == toRemove.Guid)
+                        if(list.Guid == toRemove)
                         {
                             pathsToRemove.Add(path);
                         }
+                    }
+                    catch(FileNotFoundException e)
+                    {
+
                     }
                     catch (Exception e)
                     {
@@ -129,7 +150,57 @@ namespace MicroCBuilder
             }
         }
 
-        public static async Task SaveNew(List<BuildComponent> Components, string name, string author)
+        public static async Task<(ProductList? list, string? path)> Get(Guid guid)
+        {
+            try
+            {
+                var paths = await GetSavedPaths();
+                foreach (var path in paths)
+                {
+                    try
+                    {
+                        var productFile = await StorageFile.GetFileFromPathAsync(path);
+                        var json = await FileIO.ReadTextAsync(productFile);
+
+                        var list = JsonConvert.DeserializeObject<ProductList>(json);
+                        if(list.Guid == guid)
+                        {
+                            return (list, path);
+                        }
+                    }
+                    catch (FileNotFoundException e)
+                    {
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine(e.Message);
+            }
+
+            return default;
+        }
+
+        public static async Task Save(StorageFile file, ProductList list)
+        {
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(list, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
+                await FileIO.WriteTextAsync(file, json);
+                await RegisterLibraryEntry(file.Path);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        public static async Task<ProductList> SaveNew(List<BuildComponent> Components, string name, string author)
         {
             // write to file
             var list = new ProductList(Components.Where(c => c.Item != null).ToList())
@@ -138,14 +209,49 @@ namespace MicroCBuilder
                 Author = author
             };
 
-            var json = System.Text.Json.JsonSerializer.Serialize(list, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
+            try
+            {
+                var folder = await AutosaveFolder();
+                var filename = string.IsNullOrWhiteSpace(name) ? $"{list.Guid.ToString()}.build" : $"{name}_{list.Guid.ToString().Substring(0, 8)}.build";
+                var file = await folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
 
-            var folder = await AutosaveFolder();
-            var filename = string.IsNullOrWhiteSpace(name) ? $"{list.Guid.ToString()}.build" : $"{name}_{list.Guid.ToString().Substring(0,8)}.build";
-            var file = await folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+                await Save(file, list);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            return list;
+        }
 
-            await FileIO.WriteTextAsync(file, json);
-            await RegisterLibraryEntry(file.Path);
+        public static async Task<ProductList> SaveExisting(Guid guid, List<BuildComponent> Components, string name = default, string author = default)
+        {
+            var (existing, path) = await Get(guid);
+            if (existing == null)
+            {
+                return await SaveNew(Components, name, author);
+            }
+
+            var list = new ProductList(Components.Where(c => c.Item != null).ToList())
+            {
+                Name = string.IsNullOrWhiteSpace(name) ? existing.Name : name,
+                Author = string.IsNullOrWhiteSpace(author) ? existing.Author: author,
+                Guid = guid
+            };
+
+            try
+            {
+                var dir = Path.GetDirectoryName(path);
+                var folder = await StorageFolder.GetFolderFromPathAsync(dir);
+                var file = await folder.CreateFileAsync(Path.GetFileName(path), CreationCollisionOption.ReplaceExisting);
+
+                await Save(file, list);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            return list;
         }
 
         static async Task<List<string>> GetSavedPaths()

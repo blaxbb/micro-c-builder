@@ -42,8 +42,8 @@ namespace MicroCBuilder.ViewModels
             Authors = new ObservableCollection<string>();
             Authors.Add("None");
 
-            SortField = SortFieldOptions.Price;
-            Ascending = true;
+            SortField = SortFieldOptions.Created;
+            Ascending = false;
 
             ToggleDirection = new Command((_) =>
             {

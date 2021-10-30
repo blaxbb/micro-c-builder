@@ -31,11 +31,7 @@ namespace MicroCBuilder.Views
         {
             if (e.OriginalSource is FrameworkElement ele && ele.DataContext is ProductList list)
             {
-                MainPage.Instance?.CreateBuild(new ViewModels.BuildInfo()
-                {
-                    Components = list.Components,
-                    Name = list.Name,
-                });
+                MainPage.Instance?.CreateBuild(list);
             }
         }
     }

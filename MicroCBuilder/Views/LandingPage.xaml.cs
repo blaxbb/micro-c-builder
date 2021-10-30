@@ -29,7 +29,7 @@ namespace MicroCBuilder.Views
     /// </summary>
     public sealed partial class LandingPage : Page
     {
-        public delegate void CreateBuildEventHandler(object sender, BuildInfo info);
+        public delegate void CreateBuildEventHandler(object sender, ProductList info);
         public event CreateBuildEventHandler OnCreateBuild;
 
         string[] files = new string[]
@@ -86,11 +86,11 @@ namespace MicroCBuilder.Views
             }
         }
 
-        private void CreateBuild(object sender, BuildInfo info)
+        private void CreateBuild(object sender, ProductList list)
         {
-            if (info != null)
+            if (list != null)
             {
-                OnCreateBuild?.Invoke(this, info);
+                OnCreateBuild?.Invoke(this, list);
             }
         }
 
@@ -98,7 +98,7 @@ namespace MicroCBuilder.Views
         {
             if(e.OriginalSource is FrameworkElement ele && ele.DataContext is FlareInfo info)
             {
-                CreateBuild(sender, new BuildInfo()
+                CreateBuild(sender, new ProductList()
                 {
                     Name = info.Flare.Title,
                     Components = info.Components

@@ -322,9 +322,9 @@ namespace MicroCBuilder.Views
             return (T)frame.Content;
         }
 
-        public void CreateBuild(BuildInfo info)
+        public void CreateBuild(ProductList list)
         {
-            if(info.Components == null)
+            if(list.Components == null)
             {
                 return;
             }
@@ -333,10 +333,12 @@ namespace MicroCBuilder.Views
             {
                 Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
             }
-            var buildPage = PushTab<BuildPage>(info.Name ?? "Build");
+            var buildPage = PushTab<BuildPage>(list.Name ?? "Build");
             if (buildPage.DataContext is BuildPageViewModel vm)
             {
-                vm.InsertComponents(info.Components);
+                vm.InsertComponents(list.Components);
+                vm.LibraryGuid = list.Guid;
+                
             }
         }
 

@@ -33,6 +33,7 @@ namespace MicroCBuilder.ViewModels
         private BuildComponent selectedItem;
 
         public ObservableCollection<BuildComponent> Components { get; }
+        public Guid LibraryGuid { get; set; }
 
         private string query;
         private Flare flare;
@@ -105,7 +106,7 @@ namespace MicroCBuilder.ViewModels
                 await buildContext.AddComponents(Components.ToList());
 
                 var url = buildContext.BuildURL;
-                if(string.IsNullOrWhiteSpace(url))
+                if (string.IsNullOrWhiteSpace(url))
                 {
                     return;
                 }
@@ -128,18 +129,19 @@ namespace MicroCBuilder.ViewModels
 
         private async Task DoUpdatePricing(object obj)
         {
-            foreach(var comp in Components.Where(c => c.Item != null))
+            foreach (var comp in Components.Where(c => c.Item != null))
             {
                 var item = BuildComponentCache.Current.FindItemBySKU(comp.Item.SKU);
-                if(item == null)
+                if (item == null)
                 {
                     var items = await Search.LoadEnhanced(comp.Item.SKU, Settings.StoreID(), "");
-                    if(items.Items.Count == 1)
+                    if (items.Items.Count == 1)
                     {
                         item = items.Items[0];
                     }
                 }
-                if(item != null) {
+                if (item != null)
+                {
                     var qty = comp.Item.Quantity;
                     comp.Item = item.CloneAndResetQuantity();
                     comp.Item.Quantity = qty;
@@ -201,7 +203,7 @@ namespace MicroCBuilder.ViewModels
             var useEncryption = new CheckBox() { Content = "Use Encryption" };
 
             stack.Children.Add(tb);
-            if(!string.IsNullOrWhiteSpace(sharedPassword))
+            if (!string.IsNullOrWhiteSpace(sharedPassword))
             {
                 stack.Children.Add(useEncryption);
             }
@@ -221,7 +223,7 @@ namespace MicroCBuilder.ViewModels
                 return;
             }
             Flare flare;
-            if(useEncryption.IsChecked ?? false && !string.IsNullOrWhiteSpace(sharedPassword))
+            if (useEncryption.IsChecked ?? false && !string.IsNullOrWhiteSpace(sharedPassword))
             {
                 flare = EncryptedFlare.Create(JsonConvert.SerializeObject(Components.Where(c => c.Item != null).ToList()), AesInfo.FromPassword(sharedPassword));
             }
@@ -282,7 +284,7 @@ namespace MicroCBuilder.ViewModels
                     var json = flare.Data;
                     imported = JsonConvert.DeserializeObject<List<BuildComponent>>(json);
                 }
-                
+
                 if (imported != null && imported.Count > 0)
                 {
                     DoReset(null);
@@ -327,7 +329,7 @@ namespace MicroCBuilder.ViewModels
             var name = new TextBox() { PlaceholderText = "Name" };
             var price = new NumberBox() { PlaceholderText = "Price" };
             var sku = new TextBox() { PlaceholderText = "SKU" };
-            var type = new ComboBox() { PlaceholderText = "Component Type", ItemsSource = Settings.Categories(), HorizontalAlignment = HorizontalAlignment.Stretch};
+            var type = new ComboBox() { PlaceholderText = "Component Type", ItemsSource = Settings.Categories(), HorizontalAlignment = HorizontalAlignment.Stretch };
 
             var ramPromoInfo = new Grid() { Visibility = Visibility.Collapsed };
             ramPromoInfo.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
@@ -349,7 +351,7 @@ namespace MicroCBuilder.ViewModels
 
             type.SelectionChanged += (sender, args) =>
             {
-                if(type.SelectedValue is ComponentType t && t == RAM)
+                if (type.SelectedValue is ComponentType t && t == RAM)
                 {
                     ramPromoInfo.Visibility = Visibility.Visible;
                 }
@@ -439,7 +441,7 @@ namespace MicroCBuilder.ViewModels
             {
                 results = await Search.LoadEnhanced(query, Settings.StoreID(), null);
             }, $"Searching for {query}", 1);
-            
+
 
             if (results != null)
             {
@@ -574,12 +576,12 @@ namespace MicroCBuilder.ViewModels
         private BuildComponent InsertAtSKUIndex(BuildComponent.ComponentType type, string sku)
         {
             var item = Components.FirstOrDefault(c => c.Item != null && c.Item.SKU == sku);
-            if(item == null)
+            if (item == null)
             {
                 return InsertAtEndByType(type);
             }
             var index = Components.IndexOf(item);
-            if(index < 0)
+            if (index < 0)
             {
                 return InsertAtEndByType(type);
             }
@@ -621,7 +623,7 @@ namespace MicroCBuilder.ViewModels
             foreach (var loadedComp in fromFile)
             {
                 bool found = false;
-                if(loadedComp.Type == BuildComponent.ComponentType.None && loadedComp.Item != null && loadedComp.Item.ComponentType != None) 
+                if (loadedComp.Type == BuildComponent.ComponentType.None && loadedComp.Item != null && loadedComp.Item.ComponentType != None)
                 {
                     loadedComp.Type = loadedComp.Item.ComponentType;
                 }
@@ -704,12 +706,11 @@ namespace MicroCBuilder.ViewModels
                 var list = new ProductList(Components.Where(c => c.Item != null).ToList())
                 {
                     Name = nameTb.Text,
-                    Author = string.IsNullOrWhiteSpace(authorTb.Text) ? null : authorTb.Text
+                    Author = authorTb.Text
                 };
 
-                var json = System.Text.Json.JsonSerializer.Serialize(list, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
-                await FileIO.WriteTextAsync(file, json);
-                await BuildLibrary.RegisterLibraryEntry(file.Path);
+                await BuildLibrary.Save(file, list);
+                LibraryGuid = list.Guid;
 
                 // Let Windows know that we're finished changing the file so
                 // the other app can update the remote version of the file.
@@ -820,7 +821,7 @@ namespace MicroCBuilder.ViewModels
                 Windows.UI.Popups.MessageDialog msg = new Windows.UI.Popups.MessageDialog(ex.Message, "Error");
                 await msg.ShowAsync();
             }
-            
+
         }
     }
 }
