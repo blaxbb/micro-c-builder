@@ -701,7 +701,6 @@ namespace MicroCBuilder.ViewModels
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
 
-
                 // write to file
                 var list = new ProductList(Components.Where(c => c.Item != null).ToList())
                 {

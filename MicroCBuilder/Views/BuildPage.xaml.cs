@@ -100,7 +100,7 @@ namespace MicroCBuilder.Views
 
             var cb = new CheckBox() { Content = "Export to MCOL" };
             var cbFooter = new CheckBox() { Content = "Include Footer", IsChecked = true };
-            var salesIdTb = new TextBox() { PlaceholderText = "Sales ID" };
+            var salesIdTb = new TextBox() { PlaceholderText = "Sales ID (optional)" };
 
             grid.Children.Add(cb);
             grid.Children.Add(cbFooter);
@@ -507,11 +507,13 @@ namespace MicroCBuilder.Views
             var stack = new StackPanel() { Orientation = Orientation.Vertical, Spacing = 5 };
 
             var cb = new CheckBox() { Content = "Split page", IsChecked = true };
+            var optLabel = new TextBlock() { Text = "Optional" };
             var buildTechTextBox = new TextBox() { PlaceholderText = "Build Tech" };
             var author = new TextBox() { PlaceholderText = "Author" };
             var extraTextBox = new TextBox() { PlaceholderText = "Annotation" };
 
             stack.Children.Add(cb);
+            stack.Children.Add(optLabel);
             stack.Children.Add(author);
             stack.Children.Add(buildTechTextBox);
             stack.Children.Add(extraTextBox);
@@ -540,14 +542,17 @@ namespace MicroCBuilder.Views
                 
                 await DoPrintPromo(vm.Components.ToList(), extraStrings, doSplit);
 
-                if (vm.LibraryGuid != default)
+                if (!string.IsNullOrWhiteSpace(author.Text))
                 {
-                    await BuildLibrary.SaveExisting(vm.LibraryGuid, vm.Components.ToList(), author: author.Text);
-                }
-                else
-                {
-                    var list = await BuildLibrary.SaveNew(vm.Components.ToList(), "Promo", author.Text);
-                    vm.LibraryGuid = list.Guid;
+                    if (vm.LibraryGuid != default)
+                    {
+                        await BuildLibrary.SaveExisting(vm.LibraryGuid, vm.Components.ToList(), author: author.Text);
+                    }
+                    else
+                    {
+                        var list = await BuildLibrary.SaveNew(vm.Components.ToList(), "Promo", author.Text);
+                        vm.LibraryGuid = list.Guid;
+                    }
                 }
             }
         }

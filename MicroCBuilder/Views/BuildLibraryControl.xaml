@@ -104,7 +104,7 @@
                     <Grid RowSpacing="5" Margin="5">
                         <Grid.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem Icon="Delete" Text="Delete" Command="{Binding DataContext.RemoveItem, ElementName=control}" CommandParameter="{Binding }"/>
+                                <MenuFlyoutItem Icon="Cancel" Text="Remove" Command="{Binding DataContext.RemoveItem, ElementName=control}" CommandParameter="{Binding }"/>
                             </MenuFlyout>
                         </Grid.ContextFlyout>
                         <Grid.ColumnDefinitions>

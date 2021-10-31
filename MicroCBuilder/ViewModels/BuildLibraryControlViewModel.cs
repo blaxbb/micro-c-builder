@@ -114,7 +114,7 @@ namespace MicroCBuilder.ViewModels
         {
             foreach (var list in ProductLists)
             {
-                if (!Authors.Contains(list.Author))
+                if (!string.IsNullOrWhiteSpace(list.Author) && !Authors.Contains(list.Author))
                 {
                     Authors.Add(list.Author);
                 }
