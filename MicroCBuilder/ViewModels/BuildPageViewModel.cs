@@ -633,6 +633,7 @@ namespace MicroCBuilder.ViewModels
                     if (oldComp.Type == loadedComp.Type && oldComp.Item == null)
                     {
                         oldComp.Item = loadedComp.Item;
+                        oldComp.Serials = loadedComp.Serials;
                         found = true;
                         break;
                     }
@@ -641,6 +642,7 @@ namespace MicroCBuilder.ViewModels
                 {
                     var comp = InsertAtEndByType(loadedComp.Type);
                     comp.Item = loadedComp.Item;
+                    comp.Serials = loadedComp.Serials;
                 }
             }
 

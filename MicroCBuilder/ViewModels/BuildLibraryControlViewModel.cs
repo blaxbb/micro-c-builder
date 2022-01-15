@@ -57,14 +57,14 @@ namespace MicroCBuilder.ViewModels
             Task.Run(async () =>
             {
                 var library = await BuildLibrary.GetLibrary();
-                foreach (var entry in library)
+                await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
-                    await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                    foreach (var entry in library)
                     {
-                        AllProductLists.Add(entry);
-                        FilterList();
-                    });
-                }
+                            AllProductLists.Add(entry);
+                    }
+                    FilterList();
+                });
             });
 
             RemoveItem = new Command<ProductList>(async (list) =>
