@@ -111,6 +111,17 @@ namespace MicroCBuilder.Views
                         IsSettingsPage = false;
                         IsChecklistPage = true;
                         break;
+                    case OrderHistoryPage:
+                        IsLandingPage = false;
+                        isBuildPage = false;
+                        isSettingsPage = false;
+                        IsChecklistPage = false;
+                        break;
+                    case null:
+                        break;
+                    default:
+                        Console.WriteLine($"Menu items not defined for type {CurrentTabContent.GetType().Name}");
+                        break;
                 }
             };
 
@@ -353,6 +364,15 @@ namespace MicroCBuilder.Views
             {
                 vm.Checklist = checklist;
             }
+        }
+
+        public void CreateOrderHistory(string salesId)
+        {
+            if (Tabs.SelectedIndex >= 0 && Tabs.SelectedIndex < Tabs.TabItems.Count)
+            {
+                Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
+            }
+            var page = PushTab<OrderHistoryPage>("Order History");
         }
 
         private void Tabs_AddTabButtonClick(Microsoft.UI.Xaml.Controls.TabView sender, object args)
