@@ -21,58 +21,35 @@ namespace MicroCBuilder.Views.OrderHistory
 {
     public sealed partial class TransactionList : UserControl
     {
+
+
+        public List<CommissionLineItem> Items
+        {
+            get { return (List<CommissionLineItem>)GetValue(ItemsProperty); }
+            set { SetValue(ItemsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for Items.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ItemsProperty =
+            DependencyProperty.Register("Items", typeof(List<CommissionLineItem>), typeof(TransactionList), new PropertyMetadata(new List<CommissionLineItem>(), propchanged));
+
+        private static void propchanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if(e.Property == ItemsProperty && d is TransactionList list)
+            {
+                list.SetupTransactions(list.Items);
+            }
+        }
+
         public TransactionList()
         {
             this.InitializeComponent();
-            InitDataGrid();
         }
 
-        private void InitDataGrid()
+        public void SetupTransactions(List<CommissionLineItem> lines)
         {
-            var numb = new TransactionNumber() { Department = "PO", StoreId = 141, TransactionId = 1234567 };
-            var numb2 = new TransactionNumber() { Department = "PO", StoreId = 141, TransactionId = 1234567 };
-            var lines = new List<CommissionLineItem>()
-            {
-                new CommissionLineItem()
-                {
-                    TransactionNumber = numb,
-                    Description = "Item Description",
-                    Amount = 99.99f,
-                    Total = 199.98f,
-                    Quantity = 2,
-                    Sku = "123456"
-                },
-                new CommissionLineItem()
-                {
-                    TransactionNumber = numb,
-                    Description = "Item Description 2",
-                    Amount = 43.99f,
-                    Total = 43.99f,
-                    Quantity = 1,
-                    Sku = "654321"
-                },
-                new CommissionLineItem()
-                {
-                    TransactionNumber = numb2,
-                    Description = "Item Description",
-                    Amount = 99.99f,
-                    Total = 99.99f,
-                    Quantity = 1,
-                    Sku = "123456"
-                },
-                new CommissionLineItem()
-                {
-                    TransactionNumber = numb2,
-                    Description = "Item Description 2",
-                    Amount = 43.99f,
-                    Total = 131.97f,
-                    Quantity = 3,
-                    Sku = "654321"
-                }
-            };
-
             var groups = lines
-                .GroupBy(l => l.TransactionNumber)
+                .GroupBy(l => l.Transaction)
                 .Select(g => new { GroupName = g.Key, Items = g });
 
             var Items = new ObservableCollection<GroupInfoCollection<CommissionLineItem>>();
@@ -84,6 +61,7 @@ namespace MicroCBuilder.Views.OrderHistory
                 {
                     collection.Add(item);
                 }
+                collection.Add(new CommissionLineItem() { Total = group.Items.Sum(i => i.Total) });
                 Items.Add(collection);
             }
 

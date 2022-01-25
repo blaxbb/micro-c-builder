@@ -8,7 +8,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <ResourceDictionary>
-                    <converters:StringFormatConverter x:Key="MoneyFormat" Format="$ {0:#,#.00}"/>
+                    <converters:StringFormatConverter x:Key="MoneyFormat" Format="{}{0:C2}"/>
                     <converters:NullVisibilityConverter x:Key="HideIfNull"/>
                     <converters:NullVisibilityConverter x:Key="ShowIfNull" NullIsCollapsed="False"/>
                     <converters:QuantityBackgroundConverter x:Key="QuantityBackground"/>
@@ -17,6 +17,7 @@
                     <converters:FocusVisibilityConverter x:Key="ShowIfPasswordRevealed"/>
                     <converters:FocusVisibilityConverter x:Key="HideIfPasswordRevealed" ShowWhenFocused="False"/>
                     <converters:StringFormatConverter x:Key="ShortDateTimeFormat" Format="{}{0:MM/dd/yy hh:mm}"/>
+                    <converters:ZeroAsEmptyStringConverter x:Key="ZeroEmptyString" Format="{}{0:C2}"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

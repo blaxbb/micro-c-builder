@@ -10,16 +10,25 @@
     d:DesignHeight="300"
     d:DesignWidth="400">
 
+    <UserControl.Resources>
+        <Brush x:Key="MyColumnHeaderBackgroundColor">#404040</Brush>
+        <StaticResource x:Key="DataGridRowGroupHeaderBackgroundBrush" ResourceKey="MyColumnHeaderBackgroundColor"/>
+        <SolidColorBrush x:Key="DataGridCellFocusVisualPrimaryBrush" Color="Transparent"/>
+        <SolidColorBrush x:Key="DataGridCellFocusVisualSecondaryBrush" Color="Transparent"/>
+    </UserControl.Resources>
+
     <controls:DataGrid x:Name="dataGrid"
                        AutoGenerateColumns="False"
                        LoadingRowGroup="dataGrid_LoadingRowGroup"
-                       RowGroupHeaderPropertyNameAlternative="">
+                       RowGroupHeaderPropertyNameAlternative=""
+                       AreRowGroupHeadersFrozen="True"
+                       Padding="10">
         <controls:DataGrid.Columns>
-            <controls:DataGridTextColumn Header="SKU" Binding="{Binding Sku}"/>
-            <controls:DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
-            <controls:DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}"/>
-            <controls:DataGridTextColumn Header="Unit Price" Binding="{Binding Amount}"/>
-            <controls:DataGridTextColumn Header="Total" Binding="{Binding Total}"/>
+            <controls:DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="*"/>
+            <controls:DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="6*"/>
+            <controls:DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, Converter={StaticResource ZeroEmptyString}}" Width="*"/>
+            <controls:DataGridTextColumn Header="Unit Price" Binding="{Binding Amount, Converter={StaticResource ZeroEmptyString}}" Width="*"/>
+            <controls:DataGridTextColumn Header="Total" Binding="{Binding Total, Converter={StaticResource ZeroEmptyString}}" Width="*"/>
         </controls:DataGrid.Columns>
         
     </controls:DataGrid>

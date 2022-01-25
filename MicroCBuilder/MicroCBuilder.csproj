@@ -137,6 +137,7 @@
     <Compile Include="Converters\QuantityBackgroundConverter.cs" />
     <Compile Include="Converters\SplitStringConverter.cs" />
     <Compile Include="Converters\StringCSVConverter.cs" />
+    <Compile Include="Converters\ZeroAsEmptyStringConverter.cs" />
     <Compile Include="Converters\StringFormatConverter.cs" />
     <Compile Include="FlareHubManager.cs" />
     <Compile Include="LocalSearch.cs" />
@@ -158,6 +159,7 @@
     <Compile Include="ViewModels\ChecklistIndexControlViewModel.cs" />
     <Compile Include="ViewModels\ChecklistPageViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
+    <Compile Include="ViewModels\OrderHistory\OrderHistoryPageViewModel.cs" />
     <Compile Include="ViewModels\OrderHistory\OrderHistorySummaryControlViewModel.cs" />
     <Compile Include="ViewModels\SettingsPageViewModel.cs" />
     <Compile Include="Views\BarcodePrintView.xaml.cs">
@@ -360,6 +362,9 @@
     </PackageReference>
     <PackageReference Include="FuzzySharp">
       <Version>2.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.UWP">
+      <Version>2.0.0-beta.80</Version>
     </PackageReference>
     <PackageReference Include="micro-c-lib">
       <Version>1.0.9</Version>

@@ -5,56 +5,49 @@
     xmlns:local="using:MicroCBuilder.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" xmlns:orderhistory="using:MicroCBuilder.Views.OrderHistory"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:orderhistory="using:MicroCBuilder.Views.OrderHistory"
+    xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.UWP"
+    xmlns:vm="using:MicroCBuilder.ViewModels.OrderHistory"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
+    <Page.DataContext>
+        <vm:OrderHistoryPageViewModel/>
+    </Page.DataContext>
 
     <Grid>
 
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
-        <ListView Grid.Column="0" Grid.Row="0" SelectionMode="Extended">
-            <ListView.Items>
-                <x:String>AAA</x:String>
-                <x:String>BBB</x:String>
-                <x:String>CCC</x:String>
-                <x:String>DDD</x:String>
-                <x:String>EEE</x:String>
-            </ListView.Items>
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Grid.ContextFlyout>
-                            <MenuBarItemFlyout>
-                                <MenuFlyoutItem Text="AAA">
-                                    
-                                </MenuFlyoutItem>
-                                <MenuFlyoutItem Text="BBB">
-
-                                </MenuFlyoutItem>
-                            </MenuBarItemFlyout>
-                        </Grid.ContextFlyout>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="3*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Column="0" Text="Name"/>
-                        <TextBlock Grid.Column="1" Text="32" HorizontalAlignment="Right"/>
-                        <TextBlock Grid.Column="2" Text="$654321.00" HorizontalAlignment="Right"/>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-        <orderhistory:TransactionList Grid.Column="1"/>
+        <controls:DataGrid Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" SelectionMode="Extended" ItemsSource="{Binding SalesAssociatesSummaries}" AutoGenerateColumns="False" IsReadOnly="True" SelectedItem="{Binding SelectedAssociate, Mode=TwoWay}">
+            <controls:DataGrid.Columns>
+                <controls:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                <controls:DataGridTemplateColumn Header="Transactions">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock VerticalAlignment="Center">
+                                <Run Text="{Binding TransactionCount}"/>
+                                <Run Text=" ("/>
+                                <Run Text="{Binding ReturnCount}"/>
+                                <Run Text=")"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
+                <controls:DataGridTextColumn Header="Revenue" Binding="{Binding RevenueTotal, Converter={StaticResource MoneyFormat}}" />
+            </controls:DataGrid.Columns>
+        </controls:DataGrid>
+        <orderhistory:TransactionList Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Items="{Binding SelectedTransactions}"/>
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="Transactions/Hour" HorizontalTextAlignment="Center" Padding="0,10,0,0" FontSize="20"/>
+        <lvc:CartesianChart Grid.Column="2" Grid.Row="0" x:Name="chart"/>
     </Grid>
 </Page>
