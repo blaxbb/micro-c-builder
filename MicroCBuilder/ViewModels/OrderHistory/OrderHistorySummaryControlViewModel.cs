@@ -26,7 +26,7 @@ namespace MicroCBuilder.ViewModels
             Task.Run(async () => await Load());
         }
 
-        private void OrderHistoryUpdated(List<CommissionLineItem> items, string salesId)
+        private void OrderHistoryUpdated(List<TransactionLineItem> items, string salesId)
         {
             var existing = Items.FirstOrDefault(i => i.Name == salesId);
             var index = Items.IndexOf(existing);
@@ -51,7 +51,8 @@ namespace MicroCBuilder.ViewModels
 
         private async Task Load()
         {
-            await OrderHistoryCache.LoadSalesAssociate("bbarrett");
+            var data = await OrderHistoryCache.LoadSalesAssociate("bbarrett");
+            var t = await OrderHistoryCache.LoadTransaction("1");
         }
     }
 

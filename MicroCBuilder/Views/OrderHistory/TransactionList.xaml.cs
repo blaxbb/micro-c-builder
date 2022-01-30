@@ -23,15 +23,15 @@ namespace MicroCBuilder.Views.OrderHistory
     {
 
 
-        public List<CommissionLineItem> Items
+        public List<TransactionLineItem> Items
         {
-            get { return (List<CommissionLineItem>)GetValue(ItemsProperty); }
+            get { return (List<TransactionLineItem>)GetValue(ItemsProperty); }
             set { SetValue(ItemsProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Items.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ItemsProperty =
-            DependencyProperty.Register("Items", typeof(List<CommissionLineItem>), typeof(TransactionList), new PropertyMetadata(new List<CommissionLineItem>(), propchanged));
+            DependencyProperty.Register("Items", typeof(List<TransactionLineItem>), typeof(TransactionList), new PropertyMetadata(new List<TransactionLineItem>(), propchanged));
 
         private static void propchanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -46,22 +46,22 @@ namespace MicroCBuilder.Views.OrderHistory
             this.InitializeComponent();
         }
 
-        public void SetupTransactions(List<CommissionLineItem> lines)
+        public void SetupTransactions(List<TransactionLineItem> lines)
         {
             var groups = lines
                 .GroupBy(l => l.Transaction)
                 .Select(g => new { GroupName = g.Key, Items = g });
 
-            var Items = new ObservableCollection<GroupInfoCollection<CommissionLineItem>>();
+            var Items = new ObservableCollection<GroupInfoCollection<TransactionLineItem>>();
             foreach (var group in groups)
             {
-                var collection = new GroupInfoCollection<CommissionLineItem>();
+                var collection = new GroupInfoCollection<TransactionLineItem>();
                 collection.Key = group.GroupName;
                 foreach (var item in group.Items)
                 {
                     collection.Add(item);
                 }
-                collection.Add(new CommissionLineItem() { Total = group.Items.Sum(i => i.Total) });
+                collection.Add(new TransactionLineItem() { Total = group.Items.Sum(i => i.Total) });
                 Items.Add(collection);
             }
 
@@ -75,8 +75,8 @@ namespace MicroCBuilder.Views.OrderHistory
         private void dataGrid_LoadingRowGroup(object sender, Microsoft.Toolkit.Uwp.UI.Controls.DataGridRowGroupHeaderEventArgs e)
         {
             ICollectionViewGroup group = e.RowGroupHeader.CollectionViewGroup;
-            var item = group.GroupItems[0] as CommissionLineItem;
-            var total = group.GroupItems.Cast<CommissionLineItem>().Sum(l => l.Total);
+            var item = group.GroupItems[0] as TransactionLineItem;
+            var total = group.GroupItems.Cast<TransactionLineItem>().Sum(l => l.Total);
             e.RowGroupHeader.PropertyValue = $"{item.TransactionNumber} ${total}";
         }
     }

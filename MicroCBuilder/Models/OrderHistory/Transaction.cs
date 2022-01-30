@@ -9,6 +9,7 @@ namespace MicroCBuilder.Models.OrderHistory
     public class Transaction
     {
         public TransactionNumber TransactionNumber { get; set; }
-        public List<CommissionLineItem> Items { get; set; }
+        public List<TransactionLineItem> TransactionItems { get; set; }
+        public DateTime TransactionDate { get; set; }
     }
 }

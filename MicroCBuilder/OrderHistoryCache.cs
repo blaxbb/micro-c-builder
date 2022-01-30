@@ -14,9 +14,9 @@ namespace MicroCBuilder
     {
         private static HttpClient client;
 
-        public static Dictionary<string, List<CommissionLineItem>> SalesAssociates = new Dictionary<string, List<CommissionLineItem>>();
+        public static Dictionary<string, List<TransactionLineItem>> SalesAssociates = new Dictionary<string, List<TransactionLineItem>>();
 
-        public delegate void SalesAssociateUpdated(List<CommissionLineItem> items, string salesId);
+        public delegate void SalesAssociateUpdated(List<TransactionLineItem> items, string salesId);
         public static event SalesAssociateUpdated SalesAssociateUpdatedEvent;
 
         static OrderHistoryCache()
@@ -24,7 +24,7 @@ namespace MicroCBuilder
             client = new HttpClient();
         }
 
-        public static async Task<List<CommissionLineItem>> LoadSalesAssociate(string salesId)
+        public static async Task<List<TransactionLineItem>> LoadSalesAssociate(string salesId)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace MicroCBuilder
                 if (match.Success)
                 {
                     Console.WriteLine(match.Groups[1].Value);
-                    var result = JsonConvert.DeserializeObject<List<CommissionLineItem>>(match.Groups[1].Value);
+                    var result = JsonConvert.DeserializeObject<List<TransactionLineItem>>(match.Groups[1].Value);
                     if (SalesAssociates.ContainsKey(salesId))
                     {
                         SalesAssociates[salesId] = result;
@@ -58,6 +58,37 @@ namespace MicroCBuilder
             catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
+            }
+
+            return default;
+        }
+
+        public static async Task<Transaction> LoadTransaction(string transactionId)
+        {
+            try
+            {
+                var regex = "{\"Data\":\\[(?<data>.*)]";
+                var transactionFile = await Windows.Storage.StorageFile.GetFileFromPathAsync(@"C:\Users\bbarr\OneDrive\Documents\MicroCBuilder\Order History.html");
+                var html = await Windows.Storage.FileIO.ReadTextAsync(transactionFile);
+                //var result = await client.GetAsync("file:///C:/dev/MCSalesHistory/Sales%20Lookup%20-%203_8_2019.html");
+                //if (!result.IsSuccessStatusCode)
+                //{
+                //    return;
+                //}
+
+                //var html = await result.Content.ReadAsStringAsync();
+                var match = Regex.Match(html, regex);
+                if (match.Success)
+                {
+                    Console.WriteLine("Success");
+                    var ret = JsonConvert.DeserializeObject<Transaction>(match.Groups[1].Value);
+                    ret.TransactionItems.ForEach(t => t.TransactionNumber = ret.TransactionNumber);
+                    return ret;
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
 
             return default;

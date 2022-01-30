@@ -10,7 +10,7 @@ namespace MicroCBuilder.ViewModels.OrderHistory
 {
     public class OrderHistoryPageViewModel : BaseViewModel
     {
-        private List<CommissionLineItem> selectedTransactions;
+        private List<TransactionLineItem> selectedTransactions;
         private SalesAssociateSummary selectedAssociate;
 
         public ObservableCollection<SalesAssociateSummary> SalesAssociatesSummaries { get; }
@@ -20,10 +20,10 @@ namespace MicroCBuilder.ViewModels.OrderHistory
             set
             {
                 SetProperty(ref selectedAssociate, value);
-                SelectedTransactions = OrderHistoryCache.SalesAssociates.ContainsKey(selectedAssociate.Name) ? OrderHistoryCache.SalesAssociates[selectedAssociate.Name] : new List<CommissionLineItem>();
+                SelectedTransactions = OrderHistoryCache.SalesAssociates.ContainsKey(selectedAssociate.Name) ? OrderHistoryCache.SalesAssociates[selectedAssociate.Name] : new List<TransactionLineItem>();
             }
         }
-        public List<CommissionLineItem> SelectedTransactions { get => selectedTransactions; set => SetProperty(ref selectedTransactions, value); }
+        public List<TransactionLineItem> SelectedTransactions { get => selectedTransactions; set => SetProperty(ref selectedTransactions, value); }
 
         public OrderHistoryPageViewModel()
         {
@@ -35,7 +35,7 @@ namespace MicroCBuilder.ViewModels.OrderHistory
             }
         }
 
-        private void OrderHistoryCacheUpdated(List<Models.OrderHistory.CommissionLineItem> items, string salesId)
+        private void OrderHistoryCacheUpdated(List<Models.OrderHistory.TransactionLineItem> items, string salesId)
         {
 
         }
@@ -58,7 +58,7 @@ namespace MicroCBuilder.ViewModels.OrderHistory
 
         }
 
-        public SalesAssociateSummary(string name, List<CommissionLineItem> items)
+        public SalesAssociateSummary(string name, List<TransactionLineItem> items)
         {
             Name = name;
             var grouped = items.GroupBy(i => i.Transaction);
