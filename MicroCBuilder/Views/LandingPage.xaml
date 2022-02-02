@@ -19,7 +19,7 @@
     <Grid Margin="20" ColumnSpacing="10" RowSpacing="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -92,8 +92,8 @@
 
             <!--#endregion-->
         </Grid>
-        <local:BuildLibraryControl Grid.Column="1" Grid.Row="0" />
-        <local:OrderHistorySummaryControl Grid.Column="1" Grid.Row="1" />
+        <local:BuildLibraryControl Visibility="Collapsed" Grid.Column="1" Grid.Row="0" />
+        <local:OrderHistorySummaryControl Visibility="Collapsed" Grid.Column="1" Grid.Row="1" />
         <Grid Grid.Column="2" Grid.Row="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
