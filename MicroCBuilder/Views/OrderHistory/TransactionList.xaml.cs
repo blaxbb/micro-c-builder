@@ -49,35 +49,29 @@ namespace MicroCBuilder.Views.OrderHistory
         public void SetupTransactions(List<TransactionLineItem> lines)
         {
             var groups = lines
-                .GroupBy(l => l.Transaction)
-                .Select(g => new { GroupName = g.Key, Items = g });
+                .GroupBy(l => l.TransactionNumber)
+                .Select(g => new Transaction() { TransactionNumber = g.Key, TransactionItems = g.ToList() });
 
-            var Items = new ObservableCollection<GroupInfoCollection<TransactionLineItem>>();
-            foreach (var group in groups)
-            {
-                var collection = new GroupInfoCollection<TransactionLineItem>();
-                collection.Key = group.GroupName;
-                foreach (var item in group.Items)
-                {
-                    collection.Add(item);
-                }
-                collection.Add(new TransactionLineItem() { Total = group.Items.Sum(i => i.Total) });
-                Items.Add(collection);
-            }
+            transactions.ItemsSource = groups;
 
-            CollectionViewSource groupedItems = new CollectionViewSource();
-            groupedItems.IsSourceGrouped = true;
-            groupedItems.Source = Items;
+            //var Items = new ObservableCollection<GroupInfoCollection<TransactionLineItem>>();
+            //foreach (var group in groups)
+            //{
+            //    var collection = new GroupInfoCollection<TransactionLineItem>();
+            //    collection.Key = group.GroupName;
+            //    foreach (var item in group.Items)
+            //    {
+            //        collection.Add(item);
+            //    }
+            //    collection.Add(new TransactionLineItem() { Total = group.Items.Sum(i => i.Total) });
+            //    Items.Add(collection);
+            //}
 
-            dataGrid.ItemsSource = groupedItems.View;
-        }
+            //CollectionViewSource groupedItems = new CollectionViewSource();
+            //groupedItems.IsSourceGrouped = true;
+            //groupedItems.Source = Items;
 
-        private void dataGrid_LoadingRowGroup(object sender, Microsoft.Toolkit.Uwp.UI.Controls.DataGridRowGroupHeaderEventArgs e)
-        {
-            ICollectionViewGroup group = e.RowGroupHeader.CollectionViewGroup;
-            var item = group.GroupItems[0] as TransactionLineItem;
-            var total = group.GroupItems.Cast<TransactionLineItem>().Sum(l => l.Total);
-            e.RowGroupHeader.PropertyValue = $"{item.TransactionNumber} ${total}";
+            //transactions.ItemsSource = groupedItems.View;
         }
     }
 

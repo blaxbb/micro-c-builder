@@ -12,6 +12,7 @@ namespace MicroCBuilder.ViewModels.OrderHistory
     {
         private List<TransactionLineItem> selectedTransactions;
         private SalesAssociateSummary selectedAssociate;
+        private DateTime date;
 
         public ObservableCollection<SalesAssociateSummary> SalesAssociatesSummaries { get; }
         public SalesAssociateSummary SelectedAssociate
@@ -25,8 +26,11 @@ namespace MicroCBuilder.ViewModels.OrderHistory
         }
         public List<TransactionLineItem> SelectedTransactions { get => selectedTransactions; set => SetProperty(ref selectedTransactions, value); }
 
+        public DateTime Date { get => date; set => SetProperty(ref date, value); }
+
         public OrderHistoryPageViewModel()
         {
+            Date = DateTime.Today;
             SalesAssociatesSummaries = new ObservableCollection<SalesAssociateSummary>();
             OrderHistoryCache.SalesAssociateUpdatedEvent += OrderHistoryCacheUpdated;
             foreach (var kvp in OrderHistoryCache.SalesAssociates)

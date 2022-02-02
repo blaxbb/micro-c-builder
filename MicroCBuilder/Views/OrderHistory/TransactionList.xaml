@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:sys="using:System"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -17,7 +18,7 @@
         <SolidColorBrush x:Key="DataGridCellFocusVisualSecondaryBrush" Color="Transparent"/>
     </UserControl.Resources>
 
-    <controls:DataGrid x:Name="dataGrid"
+    <!--<controls:DataGrid x:Name="dataGrid"
                        AutoGenerateColumns="False"
                        LoadingRowGroup="dataGrid_LoadingRowGroup"
                        RowGroupHeaderPropertyNameAlternative=""
@@ -31,5 +32,49 @@
             <controls:DataGridTextColumn Header="Total" Binding="{Binding Total, Converter={StaticResource ZeroEmptyString}}" Width="*"/>
         </controls:DataGrid.Columns>
         
-    </controls:DataGrid>
+    </controls:DataGrid>-->
+
+    <ListView x:Name="transactions">
+        <ListView.ItemTemplate>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="6*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding TransactionNumber}" VerticalAlignment="Center" Padding="10"/>
+                    <ListView Grid.Column="1" Grid.Row="0" ItemsSource="{Binding TransactionItems}" SelectionMode="None" IsHitTestVisible="False">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="6*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Sku}" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Description}" Padding="10,0,10,0"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Quantity}" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Amount}" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding Total}" HorizontalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <TextBlock Grid.Row="1" Text="{Binding TransactionItems.Count, Converter={StaticResource Format}, ConverterParameter='Units {0}'}"/>
+                </Grid>
+            </DataTemplate>
+        </ListView.ItemTemplate>
+    </ListView>
 </UserControl>

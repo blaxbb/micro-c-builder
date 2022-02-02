@@ -8,6 +8,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <ResourceDictionary>
+                    <converters:StringFormatConverter x:Key="Format"/>
                     <converters:StringFormatConverter x:Key="MoneyFormat" Format="{}{0:C2}"/>
                     <converters:NullVisibilityConverter x:Key="HideIfNull"/>
                     <converters:NullVisibilityConverter x:Key="ShowIfNull" NullIsCollapsed="False"/>
