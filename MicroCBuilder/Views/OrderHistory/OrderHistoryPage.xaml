@@ -8,11 +8,11 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:orderhistory="using:MicroCBuilder.Views.OrderHistory"
     xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
-    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.UWP"
     xmlns:vm="using:MicroCBuilder.ViewModels.OrderHistory"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
+    <!--xmlns:lvc="using:LiveChartsCore.SkiaSharpView.UWP"-->
     <Page.DataContext>
         <vm:OrderHistoryPageViewModel/>
     </Page.DataContext>
@@ -62,7 +62,7 @@
             </Grid.RowDefinitions>
             <orderhistory:TransactionList Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Items="{Binding SelectedTransactions}"/>
             <TextBlock Grid.Column="1" Grid.Row="1" Text="Transactions/Hour" HorizontalTextAlignment="Center" Padding="0,10,0,0" FontSize="20"/>
-            <lvc:CartesianChart Grid.Column="1" Grid.Row="1" x:Name="chart"/>
+            <!--<lvc:CartesianChart Grid.Column="1" Grid.Row="1" x:Name="chart"/>-->
         </Grid>
     </Grid>
 </Page>

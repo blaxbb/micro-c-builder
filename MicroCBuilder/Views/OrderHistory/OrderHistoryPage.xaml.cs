@@ -1,6 +1,6 @@
-﻿using LiveChartsCore;
-using LiveChartsCore.Kernel.Sketches;
-using LiveChartsCore.SkiaSharpView;
+﻿//using LiveChartsCore;
+//using LiveChartsCore.Kernel.Sketches;
+//using LiveChartsCore.SkiaSharpView;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,22 +29,22 @@ namespace MicroCBuilder.Views
             this.InitializeComponent();
 
             //Task.Run(async () => { await InitChart(); });
-            chart.Series = new ISeries[]
-            {
-                new LineSeries<double>
-                {
-                    Values = new double[] { 2, 1, 3, 5, 3, 4, 6 },
-                    Fill = null
-                }
-            };
+            //chart.Series = new ISeries[]
+            //{
+            //    new LineSeries<double>
+            //    {
+            //        Values = new double[] { 2, 1, 3, 5, 3, 4, 6 },
+            //        Fill = null
+            //    }
+            //};
 
-            chart.XAxes = new ICartesianAxis[]
-            {
-                new Axis()
-                {
-                    Labels = new List<string>() {"a", "b", "c", "d", "e", "f", "g"}
-                }
-            };
+            //chart.XAxes = new ICartesianAxis[]
+            //{
+            //    new Axis()
+            //    {
+            //        Labels = new List<string>() {"a", "b", "c", "d", "e", "f", "g"}
+            //    }
+            //};
 
 
         }
