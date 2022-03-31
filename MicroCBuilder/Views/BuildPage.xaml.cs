@@ -510,7 +510,7 @@ namespace MicroCBuilder.Views
             var optLabel = new TextBlock() { Text = "Optional" };
             var buildTechTextBox = new TextBox() { PlaceholderText = "Build Tech" };
             var author = new TextBox() { PlaceholderText = "Author" };
-            var extraTextBox = new TextBox() { PlaceholderText = "Annotation" };
+            var extraTextBox = new TextBox() { PlaceholderText = "Annotation", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
 
             stack.Children.Add(cb);
             stack.Children.Add(optLabel);
@@ -667,7 +667,7 @@ namespace MicroCBuilder.Views
                 promoItems.Add(new TextBlock() { Text = $"{_case.Item.Name}", TextWrapping = TextWrapping.WrapWholeWords, MaxLines = 1 });
             }
 
-            foreach(var text in extraStrings)
+            foreach(var text in extraStrings.SelectMany(s => s.Split('\r')))
             {
                 promoItems.Add(new TextBlock() { Text = text, TextWrapping = TextWrapping.NoWrap, MaxLines = 1 });
             }
@@ -777,6 +777,7 @@ namespace MicroCBuilder.Views
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Star) });
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
             foreach (var comp in Components.Where(c => c.Item != null))
             {
@@ -789,6 +790,7 @@ namespace MicroCBuilder.Views
                     item.Brand,
                     item.Name,
                     $"${item.Price:.00}",
+                    item.SKU,
                     $"Qty {comp.Item.Quantity}"
                 };
                 for(int i = 0; i < strings.Length; i++)
