@@ -403,7 +403,7 @@ namespace MicroCBuilder.Views
 
         public static async Task DoPrintBarcodes(List<BuildComponent> Components, List<(BuildComponent comp, int index)> serials)
         {
-            var itemsCount = Components.Count(c => c.Item != null);
+            var itemsCount = Components.Where(c => c.Item != null).Sum(c => c.Item.Quantity);
             if (itemsCount == 0)
             {
                 return;
