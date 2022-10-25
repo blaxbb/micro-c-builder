@@ -40,6 +40,7 @@ steps:
                   /p:PackageCertificateThumbprint="" 
                   /p:GenerateAppInstallerFile=true
                   /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"
+                  /p:PackageCertificatePassword="$(certPassword)"
                   /p:AppInstallerUri="https://bbarrett.me/MicroCBuilder"
                   /p:AppInstallerUpdateFrequency=1
                   /p:AppInstallerCheckForUpdateFrequency=OnApplicationRun'
