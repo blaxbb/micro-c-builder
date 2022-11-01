@@ -12,6 +12,7 @@
   <ItemGroup>
     <None Remove="Views\BuildLibraryControl.xaml" />
     <None Remove="Views\ChecklistIndexControl.xaml" />
+    <None Remove="Views\MessageBox.xaml" />
     <None Remove="Views\OrderHistoryPage.xaml" />
     <None Remove="Views\OrderHistorySummaryControl.xaml" />
     <None Remove="Views\OrderHistory\TransactionList.xaml" />
@@ -56,6 +57,12 @@
     <Content Update="Assets\BuildTemplates\TIER_5.build">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\MessageBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>

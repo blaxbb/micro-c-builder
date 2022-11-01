@@ -211,7 +211,8 @@ namespace MicroCBuilder.ViewModels
                 Title = "Export to web",
                 Content = stack,
                 PrimaryButtonText = "Export",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
             tb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
             var result = await dialog.ShowAsync();
@@ -256,7 +257,8 @@ namespace MicroCBuilder.ViewModels
                 Title = "Import From web",
                 Content = tb,
                 PrimaryButtonText = "Import",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
             tb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
             var result = await dialog.ShowAsync();
@@ -364,7 +366,8 @@ namespace MicroCBuilder.ViewModels
                 Title = "Add - Search",
                 Content = panel,
                 PrimaryButtonText = "Submit",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
             name.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
             price.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
@@ -417,7 +420,8 @@ namespace MicroCBuilder.ViewModels
                 Title = "Add - Search",
                 Content = tb,
                 PrimaryButtonText = "Submit",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
 
             tb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
@@ -455,11 +459,7 @@ namespace MicroCBuilder.ViewModels
                 }
                 else
                 {
-                    var msg = new ContentDialog()
-                    {
-                        Title = "No results found.",
-                        PrimaryButtonText = "Ok"
-                    };
+                    var msg = new MessageBox(MainWindow.Current.Content.XamlRoot, "No results found", null);
                     await msg.ShowAsync();
                 }
 
@@ -486,7 +486,8 @@ namespace MicroCBuilder.ViewModels
                 Title = "Search Results",
                 PrimaryButtonText = "Submit",
                 SecondaryButtonText = "Cancel",
-                Content = listView
+                Content = listView,
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
 
             listView.PreviewKeyDown += (sender, args) =>
@@ -667,7 +668,8 @@ namespace MicroCBuilder.ViewModels
                 Title = "Save Signs",
                 Content = stack,
                 PrimaryButtonText = "Save",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
 
         showDialog:
@@ -741,8 +743,10 @@ namespace MicroCBuilder.ViewModels
                 Title = "Save Signs",
                 Content = signControl,
                 PrimaryButtonText = "Save",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
+            dialog.XamlRoot = MainWindow.Current.Content.XamlRoot;
 
         showDialog:
             var result = await dialog.ShowAsync();
@@ -765,7 +769,7 @@ namespace MicroCBuilder.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(checkStrings[i]))
                 {
-                    Windows.UI.Popups.MessageDialog msg = new Windows.UI.Popups.MessageDialog($"{checkStringsOutput[i]} cannot be empty!", "Error");
+                    var msg = new MessageBox(MainWindow.Current.Content.XamlRoot, "Error", $"{checkStringsOutput[i]} cannot be empty!");
                     await msg.ShowAsync();
                     goto showDialog;
                 }
@@ -802,7 +806,7 @@ namespace MicroCBuilder.ViewModels
 
                 if (string.IsNullOrWhiteSpace(url))
                 {
-                    Windows.UI.Popups.MessageDialog msg = new Windows.UI.Popups.MessageDialog("Failed to export signs!", "Error");
+                    var msg = new MessageBox(MainWindow.Current.Content.XamlRoot, "Error", "Failed to export signs!");
                     await msg.ShowAsync();
                 }
                 else
@@ -817,7 +821,7 @@ namespace MicroCBuilder.ViewModels
             }
             catch (Exception ex)
             {
-                Windows.UI.Popups.MessageDialog msg = new Windows.UI.Popups.MessageDialog(ex.Message, "Error");
+                var msg = new MessageBox(MainWindow.Current.Content.XamlRoot, "Error", ex.Message);
                 await msg.ShowAsync();
             }
 

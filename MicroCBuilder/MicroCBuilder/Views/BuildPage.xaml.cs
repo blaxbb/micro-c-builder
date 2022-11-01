@@ -114,8 +114,10 @@ namespace MicroCBuilder.Views
                 Title = "Print options",
                 Content = grid,
                 PrimaryButtonText = "Print",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = XamlRoot
             };
+
             salesIdTb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
             var result = await dialog.ShowAsync();
             var name = salesIdTb.Text;
@@ -353,6 +355,7 @@ namespace MicroCBuilder.Views
                 PrimaryButtonText = "Print",
                 SecondaryButtonText = "Cancel",
                 FullSizeDesired = true,
+                XamlRoot = XamlRoot
             };
 
             var result = await dialog.ShowAsync();
@@ -524,7 +527,8 @@ namespace MicroCBuilder.Views
                 Title = "Print options",
                 Content = stack,
                 PrimaryButtonText = "Print",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = XamlRoot
             };
             var result = await dialog.ShowAsync();
             var doSplit = cb.IsChecked ?? false;
@@ -868,8 +872,8 @@ namespace MicroCBuilder.Views
         private async void PrintHelper_OnPrintFailed()
         {
             ReleasePrintHelper();
-            var dialog = new MessageDialog("Printing failed.");
-            await dialog.ShowAsync();
+            var msg = new MessageBox(MainWindow.Current.Content.XamlRoot, "Error", "Printing failed");
+            await msg.ShowAsync();
         }
 
         private void PrintHelper_OnPrintCanceled()

@@ -1,6 +1,7 @@
 ﻿using DataFlareClient;
 using MicroCBuilder.Models;
 using MicroCBuilder.Views;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Newtonsoft.Json;
 using System;
@@ -148,6 +149,7 @@ namespace MicroCBuilder.ViewModels
             dialog.Title = existing == null ? "New Item" : $"Edit {existing.Name}";
             dialog.PrimaryButtonText = "Save";
             dialog.SecondaryButtonText = "Cancel";
+            dialog.XamlRoot = MainWindow.Current.Content.XamlRoot;
 
             var control = new ChecklistItemEditControl();
             control.NameTextBox.Text = existing?.Name ?? "";
@@ -200,7 +202,8 @@ namespace MicroCBuilder.ViewModels
                 Title = "Export to web",
                 Content = stack,
                 PrimaryButtonText = "Export",
-                SecondaryButtonText = "Cancel"
+                SecondaryButtonText = "Cancel",
+                XamlRoot = MainWindow.Current.Content.XamlRoot
             };
             tb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
             var result = await dialog.ShowAsync();

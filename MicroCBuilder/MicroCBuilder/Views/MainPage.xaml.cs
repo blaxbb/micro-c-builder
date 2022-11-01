@@ -558,7 +558,6 @@ namespace MicroCBuilder.Views
         public static void PrintHelper_Initialize()
         {
             PrintHelper = new PrintHelper(PrintContainer);
-
             PrintHelper.OnPrintCanceled += PrintHelper_OnPrintCanceled;
             PrintHelper.OnPrintFailed += PrintHelper_OnPrintFailed;
             PrintHelper.OnPrintSucceeded += PrintHelper_OnPrintSucceeded;
@@ -572,8 +571,8 @@ namespace MicroCBuilder.Views
         public static async void PrintHelper_OnPrintFailed()
         {
             ReleasePrintHelper();
-            var dialog = new MessageDialog("Printing failed.");
-            await dialog.ShowAsync();
+            var msg = new MessageBox(MainWindow.Current.Content.XamlRoot, "Error", "Printing failed");
+            await msg.ShowAsync();
         }
 
         public static void PrintHelper_OnPrintCanceled()
