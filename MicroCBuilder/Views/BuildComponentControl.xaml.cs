@@ -250,6 +250,7 @@ namespace MicroCBuilder.Views
                     Name = $"{duration} Year Plan",
                     Price = tier.Price,
                     OriginalPrice = tier.Price,
+                    SKU = tier.SKU,
                     Brand = "Micro Center",
                     Quantity = 1,
                     Specs = new Dictionary<string, string>()
