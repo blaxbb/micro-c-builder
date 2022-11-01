@@ -60,8 +60,7 @@ namespace MicroCBuilder.Views
         private void CreateChecklist(object sender, Checklist checklist)
         {
             //this function also called from viewmodel via event
-            //todo
-            //MainPage.Instance.CreateChecklist(checklist);
+            MainPage.Instance.CreateChecklist(checklist);
         }
 
         private void ChecklistFlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
