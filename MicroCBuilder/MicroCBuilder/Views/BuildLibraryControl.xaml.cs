@@ -30,9 +30,7 @@ namespace MicroCBuilder.Views
         {
             if (e.OriginalSource is FrameworkElement ele && ele.DataContext is ProductList list)
             {
-                //TODO impl
-
-                //MainPage.Instance?.CreateBuild(list);
+                MainPage.Instance?.CreateBuild(list);
             }
         }
     }
