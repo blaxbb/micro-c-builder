@@ -1,6 +1,7 @@
 ﻿using DataFlareClient;
 using MicroCBuilder.Models;
 using MicroCBuilder.Views;
+using Microsoft.UI.Xaml.Controls;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.UI.Xaml.Controls;
 
 namespace MicroCBuilder.ViewModels
 {
@@ -17,10 +17,9 @@ namespace MicroCBuilder.ViewModels
     {
         private Checklist checklist;
 
-        public Checklist Checklist { get => checklist; set { SetProperty(ref checklist, value); checklist?.Items.ToList().ForEach(c => c.PropertyChanged += Item_PropertyChanged); } }
+        public Checklist Checklist { get => checklist; set { checklist?.Items.ToList().ForEach(c => c.PropertyChanged -= Item_PropertyChanged); SetProperty(ref checklist, value); checklist?.Items.ToList().ForEach(c => c.PropertyChanged += Item_PropertyChanged); } }
         public Command<ChecklistItem> EditItemCommand { get; }
-        public ObservableCollection<Checklist> Checklists { get; }
-        public Command UpdateNetworkChecklistFlares { get; }
+        public Command<ChecklistItem> DeleteItemCommand { get; }
 
         Dictionary<string, DateTime> AssignedUpdatedTimes { get; }
 
@@ -30,69 +29,21 @@ namespace MicroCBuilder.ViewModels
         {
             AssignedUpdatedTimes = new Dictionary<string, DateTime>();
             Checklist = new Checklist();
-            Checklists = new ObservableCollection<Checklist>();
-
-            ChecklistFavoriteCache.OnChecklistFavoritesUpdated += (favorites) =>
-            {
-                foreach (var checklist in Checklists)
-                {
-                    checklist.IsFavorited = favorites.IsFavorited(checklist);
-                }
-            };
-
-            UpdateNetworkChecklistFlares = new Command(async (o) =>
-            {
-                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklist-{Settings.StoreID()}");
-                var sharedPassword = Settings.SharedPassword();
-                var aesInfo = AesInfo.FromPassword(sharedPassword);
-                var latestItems = flares.Select(f =>
-                {
-                    try
-                    {
-                        var checklist = f.TryDecrypt<Checklist>(aesInfo);
-                        checklist.data.Created = f.Created;
-                        checklist.data.UseEncryption = checklist.encrypted;
-                        checklist.data.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(checklist.data) ?? false;
-                        return checklist.data;
-                    }
-                    catch (Exception e)
-                    {
-                        return default;
-                    }
-                }).ToList();
-                Console.WriteLine(latestItems);
-                var toRemove = Checklists.Where(checklist => !latestItems.Any(c => checklist.Id == c.Id));
-                foreach (var f in toRemove)
-                {
-                    Checklists.Remove(f);
-                }
-
-                foreach (var newChecklist in latestItems)
-                {
-                    var existing = Checklists.FirstOrDefault(c => c.Id == newChecklist.Id);
-                    if (existing != null && existing.Created < newChecklist.Created)
-                    {
-                        var index = Checklists.IndexOf(existing);
-
-                        Checklists.Remove(existing);
-                        Checklists.Insert(index, newChecklist);
-                    }
-                    else
-                    {
-                        Checklists.Add(newChecklist);
-                    }
-                }
-            });
-            UpdateNetworkChecklistFlares.Execute(null);
 
             EditItemCommand = new Command<ChecklistItem>(async (item) =>
             {
                 item = await ShowEditItemDialog(item);
             });
 
+            DeleteItemCommand = new Command<ChecklistItem>(async (item) =>
+            {
+                Checklist?.Items.Remove(item);
+                await AutoExport(Checklist.UseEncryption);
+            });
+
             FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");
             var dispatcher = MainWindow.Current.DispatcherQueue;
-            FlareHubManager.OnFlareReceived += (flare) =>
+            FlareHubManager.OnFlareReceived += async (flare) =>
             {
                 dispatcher.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
@@ -142,21 +93,8 @@ namespace MicroCBuilder.ViewModels
             newChecklist.Created = flare.Created;
             newChecklist.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(newChecklist) ?? false;
 
-            var existing = Checklists.FirstOrDefault(c => c.Id == newChecklist.Id);
-            if (existing != null && existing.Created < newChecklist.Created)
-            {
-                var index = Checklists.IndexOf(existing);
 
-                Checklists.Remove(existing);
-                Checklists.Insert(index, newChecklist);
-            }
-            else
-            {
-                Checklists.Add(newChecklist);
-            }
-            OnPropertyChanged(nameof(Checklists));
-
-            if(Checklist == null || Checklist.Id == newChecklist.Id)
+            if ((Checklist == null || Checklist.Id == newChecklist.Id) && newChecklist != Checklist)
             {
                 Checklist = newChecklist;
             }
@@ -279,7 +217,10 @@ namespace MicroCBuilder.ViewModels
         {
             var sharedPassword = Settings.SharedPassword();
             Flare flare;
-            var payload = JsonConvert.SerializeObject(Checklist);
+            var payload = JsonConvert.SerializeObject(Checklist, new JsonSerializerSettings()
+            {
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+            });
             if (encrypt && !string.IsNullOrWhiteSpace(sharedPassword))
             {
                 checklist.UseEncryption = true;

@@ -35,7 +35,12 @@ namespace MicroCBuilder
                     {
                         var text = await Windows.Storage.FileIO.ReadTextAsync(file);
                         Favorites = JsonConvert.DeserializeObject<List<Checklist>>(text);
-                        OnChecklistFavoritesUpdated(this);
+                        Favorites.ForEach(f =>
+                        {
+                            f.IsFavorited = true;
+                            f.Created = DateTime.Today;
+                        });
+                        OnChecklistFavoritesUpdated?.Invoke(this);
                         return true;
                     }
                 }
@@ -51,9 +56,16 @@ namespace MicroCBuilder
         public async Task SaveCache()
         {
             OnChecklistFavoritesUpdated(this);
-            var json = System.Text.Json.JsonSerializer.Serialize(Favorites, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
-            var file = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(FILENAME, Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            await Windows.Storage.FileIO.WriteTextAsync(file, json);
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(Favorites, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
+                var file = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(FILENAME, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+                await Windows.Storage.FileIO.WriteTextAsync(file, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         public async Task AddItem(Checklist checklist)
@@ -61,14 +73,14 @@ namespace MicroCBuilder
             var existing = Favorites.FirstOrDefault(c => c.Id == checklist.Id);
             if(existing != null)
             {
-                if(existing.Created <= checklist.Created)
+                if (existing.Created >= checklist.Created)
                 {
                     return;
                 }
 
                 Favorites.Remove(existing);
             }
-            Favorites.Add(checklist);
+            Favorites.Add(checklist.Clone());
             await SaveCache();
         }
 

@@ -9,22 +9,30 @@
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Views\BuildLibraryControl.xaml" />
+    <None Remove="Views\ChecklistIndexControl.xaml" />
+    <None Remove="Views\OrderHistoryPage.xaml" />
+    <None Remove="Views\OrderHistorySummaryControl.xaml" />
+    <None Remove="Views\OrderHistory\TransactionList.xaml" />
+    <None Remove="Views\TransactionList.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI" Version="7.0.3" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.0.3" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.0.3" />
-    <PackageReference Include="DataFlareClient" Version="1.1.3" />
+    <PackageReference Include="DataFlareClient" Version="1.1.4" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
-    <PackageReference Include="micro-c-lib" Version="1.0.9" />
-    <PackageReference Include="Microsoft.AppCenter.Analytics" Version="4.4.0" />
-    <PackageReference Include="Microsoft.AppCenter.Crashes" Version="4.4.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.11" />
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.5" />
-    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.5" />
-    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.5" />
+    <PackageReference Include="micro-c-lib" Version="1.0.33" />
+    <PackageReference Include="Microsoft.AppCenter.Analytics" Version="4.5.3" />
+    <PackageReference Include="Microsoft.AppCenter.Crashes" Version="4.5.3" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.10" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.11" />
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.11" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.11" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="QRCoder" Version="1.4.1" />
+    <PackageReference Include="QRCoder" Version="1.4.3" />
     <PackageReference Include="ZXing.Net.Mobile" Version="2.4.1" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
@@ -48,5 +56,41 @@
     <Content Update="Assets\BuildTemplates\TIER_5.build">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\TransactionList.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\OrderHistorySummaryControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\OrderHistoryPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\ChecklistIndexControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\BuildLibraryControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\OrderHistory\TransactionList.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>

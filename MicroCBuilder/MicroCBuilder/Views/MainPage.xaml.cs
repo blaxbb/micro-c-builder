@@ -34,6 +34,7 @@ using static MicroCLib.Models.BuildComponent;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
+
 namespace MicroCBuilder.Views
 {
     /// <summary>
@@ -111,6 +112,17 @@ namespace MicroCBuilder.Views
                         IsSettingsPage = false;
                         IsChecklistPage = true;
                         break;
+                    case OrderHistoryPage:
+                        IsLandingPage = false;
+                        isBuildPage = false;
+                        isSettingsPage = false;
+                        IsChecklistPage = false;
+                        break;
+                    case null:
+                        break;
+                    default:
+                        Console.WriteLine($"Menu items not defined for type {CurrentTabContent.GetType().Name}");
+                        break;
                 }
             };
 
@@ -124,12 +136,12 @@ namespace MicroCBuilder.Views
             //var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             //coreTitleBar.ExtendViewIntoTitleBar = true;
             //coreTitleBar.LayoutMetricsChanged += CoreTitleBar_LayoutMetricsChanged;
-            MainWindow.Current.SetTitleBar(TabDragArea);
+            //Window.Current.SetTitleBar(TabDragArea);
         }
 
         private void Tabs_TabCloseRequested1(TabView sender, TabViewTabCloseRequestedEventArgs args)
         {
-            if(Tabs.TabItems.Count == 0)
+            if (Tabs.TabItems.Count == 0)
             {
                 Tabs_AddTabButtonClick(null, null);
             }
@@ -192,7 +204,6 @@ namespace MicroCBuilder.Views
         public async Task DisplayProgress(Func<IProgress<int>, Task> action, string title, int itemCount)
         {
             ProgressTitleText = title;
-            var dispatcher = MainWindow.Current.DispatcherQueue;
 
             var lastPercentCheck = 0f;
             TimeSpanRollingAverage average = new TimeSpanRollingAverage();
@@ -227,8 +238,9 @@ namespace MicroCBuilder.Views
 
             ProgressVisibility = Visibility.Visible;
             await action(progress)
-                .ContinueWith((_) =>
+                .ContinueWith(async (_) =>
                 {
+                    var dispatcher = MainWindow.Current.DispatcherQueue;
                     dispatcher.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                     {
                         ProgressVisibility = Visibility.Collapsed;
@@ -319,9 +331,9 @@ namespace MicroCBuilder.Views
             return (T)frame.Content;
         }
 
-        private void CreateBuild(BuildInfo info)
+        public void CreateBuild(ProductList list)
         {
-            if(info.Components == null)
+            if (list.Components == null)
             {
                 return;
             }
@@ -330,31 +342,41 @@ namespace MicroCBuilder.Views
             {
                 Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
             }
-            var buildPage = PushTab<BuildPage>(info.Name ?? "Build");
+            var buildPage = PushTab<BuildPage>(list.Name ?? "Build");
             if (buildPage.DataContext is BuildPageViewModel vm)
             {
-                vm.InsertComponents(info.Components);
+                vm.InsertComponents(list.Components);
+                vm.LibraryGuid = list.Guid;
+
             }
         }
 
-        private void CreateChecklist(Checklist checklist)
+        public void CreateChecklist(Checklist checklist)
         {
             if (Tabs.SelectedIndex >= 0 && Tabs.SelectedIndex < Tabs.TabItems.Count)
             {
                 Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
             }
             var page = PushTab<ChecklistPage>("Checklist");
-            if(page.DataContext is ChecklistPageViewModel vm)
+            if (page.DataContext is ChecklistPageViewModel vm)
             {
                 vm.Checklist = checklist;
             }
+        }
+
+        public void CreateOrderHistory(string salesId)
+        {
+            if (Tabs.SelectedIndex >= 0 && Tabs.SelectedIndex < Tabs.TabItems.Count)
+            {
+                Tabs.TabItems.RemoveAt(Tabs.SelectedIndex);
+            }
+            var page = PushTab<OrderHistoryPage>("Order History");
         }
 
         private void Tabs_AddTabButtonClick(Microsoft.UI.Xaml.Controls.TabView sender, object args)
         {
             var page = PushTab<LandingPage>("Micro-C-Builder");
             page.OnCreateBuild += (sender, info) => CreateBuild(info);
-            page.OnCreateChecklist += (sender, checklist) => CreateChecklist(checklist);
         }
 
         private void Tabs_TabCloseRequested(Microsoft.UI.Xaml.Controls.TabView sender, Microsoft.UI.Xaml.Controls.TabViewTabCloseRequestedEventArgs args)
@@ -362,7 +384,7 @@ namespace MicroCBuilder.Views
             sender.TabItems.Remove(args.Tab);
         }
 
-        private async void LoadClicked(object sender, RoutedEventArgs e)
+        private async void LoadClicked(object sender, RoutedEventArgs args)
         {
             FileOpenPicker openPicker = new FileOpenPicker
             {
@@ -371,13 +393,35 @@ namespace MicroCBuilder.Views
             };
 
             openPicker.FileTypeFilter.Add(".build");
-            try
+            StorageFile file = await openPicker.PickSingleFileAsync();
+            if (file != null)
             {
-                StorageFile file = await openPicker.PickSingleFileAsync();
-                if (file != null)
+                List<BuildComponent> components = null;
+                try
                 {
                     var text = await Windows.Storage.FileIO.ReadTextAsync(file);
-                    var components = System.Text.Json.JsonSerializer.Deserialize<List<BuildComponent>>(text);
+                    components = System.Text.Json.JsonSerializer.Deserialize<List<BuildComponent>>(text);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
+
+                if (components == null)
+                {
+                    try
+                    {
+                        var text = await Windows.Storage.FileIO.ReadTextAsync(file);
+                        var list = System.Text.Json.JsonSerializer.Deserialize<ProductList>(text);
+                        components = list.Components;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e.Message);
+                    }
+                }
+                if (components != null)
+                {
 
                     if (CurrentTabContent is LandingPage)
                     {
@@ -389,12 +433,8 @@ namespace MicroCBuilder.Views
                     {
                         vm.InsertComponents(components);
                     }
-
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
+
             }
         }
 
@@ -490,7 +530,7 @@ namespace MicroCBuilder.Views
 
         private async void AddChecklistClicked(object sender, RoutedEventArgs e)
         {
-            if(CurrentTabContent is ChecklistPage page && page.DataContext is ChecklistPageViewModel vm)
+            if (CurrentTabContent is ChecklistPage page && page.DataContext is ChecklistPageViewModel vm)
             {
                 await vm.AddItem();
             }

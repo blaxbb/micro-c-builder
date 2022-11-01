@@ -32,6 +32,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.UI;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -86,18 +87,27 @@ namespace MicroCBuilder.Views
 
         public async Task PrintClicked()
         {
+            if (vm.Components.Count(c => c.Item != null) == 0)
+            {
+                return;
+            }
+
             var grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
 
             var cb = new CheckBox() { Content = "Export to MCOL" };
-            var tb = new TextBox() { PlaceholderText = "Sales ID" };
+            var cbFooter = new CheckBox() { Content = "Include Footer", IsChecked = true };
+            var salesIdTb = new TextBox() { PlaceholderText = "Sales ID (optional)" };
 
             grid.Children.Add(cb);
-            grid.Children.Add(tb);
+            grid.Children.Add(cbFooter);
+            grid.Children.Add(salesIdTb);
 
             Grid.SetRow(cb, 0);
-            Grid.SetRow(tb, 1);
+            Grid.SetRow(cbFooter, 1);
+            Grid.SetRow(salesIdTb, 2);
 
             var dialog = new ContentDialog()
             {
@@ -106,17 +116,30 @@ namespace MicroCBuilder.Views
                 PrimaryButtonText = "Print",
                 SecondaryButtonText = "Cancel"
             };
-            tb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
+            salesIdTb.KeyDown += (sender, args) => { if (args.Key == Windows.System.VirtualKey.Enter) dialog.Hide(); };
             var result = await dialog.ShowAsync();
-            var name = tb.Text;
+            var name = salesIdTb.Text;
             var doExport = cb.IsChecked;
             if (result != ContentDialogResult.Secondary)
             {
-                await DoPrintQuote(vm.Components.ToList(), name, doExport ?? false);
+                if (!string.IsNullOrWhiteSpace(salesIdTb.Text))
+                {
+                    if (vm.LibraryGuid != default)
+                    {
+                        await BuildLibrary.SaveExisting(vm.LibraryGuid, vm.Components.ToList(), author: salesIdTb.Text);
+                    }
+                    else
+                    {
+                        var list = await BuildLibrary.SaveNew(vm.Components.ToList(), $"Customer Quote", salesIdTb.Text);
+                        vm.LibraryGuid = list.Guid;
+                    }
+                }
+                await DoPrintQuote(vm.Components.ToList(), name, doExport ?? false, cbFooter.IsChecked ?? false);
+
             }
         }
 
-        public static async Task DoPrintQuote(List<BuildComponent> Components, string salesID = "", bool exportToMCOL = false)
+        public static async Task DoPrintQuote(List<BuildComponent> Components, string salesID = "", bool exportToMCOL = false, bool includeFooter = false)
         {
             var itemsCount = Components.Count(c => c.Item != null);
             if (itemsCount == 0)
@@ -126,9 +149,9 @@ namespace MicroCBuilder.Views
 
             MainPage.PrintHelper_Initialize();
 
-            const int ITEMS_PER_PAGE = 12;
-            
-            for(int i = 0; i < itemsCount; i += ITEMS_PER_PAGE)
+            int ITEMS_PER_PAGE = includeFooter ? 12 : 13;
+
+            for (int i = 0; i < itemsCount; i += ITEMS_PER_PAGE)
             {
                 //create a new page
                 Grid page = new Grid
@@ -162,17 +185,20 @@ namespace MicroCBuilder.Views
 
                 float SubTotal = Components.Where(c => c?.Item != null).Sum(c => c.Item.Price * c.Item.Quantity);
 
-                var footer = new BuildSummaryControl
+                if (includeFooter)
                 {
-                    SubTotal = SubTotal,
-                    MCOLUrl = buildContext.TinyBuildURL
-                };
+                    var footer = new BuildSummaryControl
+                    {
+                        SubTotal = SubTotal,
+                        MCOLUrl = buildContext.TinyBuildURL
+                    };
 
+                    page.Children.Add(footer);
+                    Grid.SetRow(footer, 2);
+                }
                 page.Children.Add(header);
-                page.Children.Add(footer);
 
                 Grid.SetRow(header, 0);
-                Grid.SetRow(footer, 2);
 
                 page.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
                 page.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) });
@@ -190,7 +216,7 @@ namespace MicroCBuilder.Views
                     pv.Content = null;
 
                     BuildComponent plan1, plan2;
-                    if(comp.Type == BuildComponent.ComponentType.BuildService)
+                    if (comp.Type == BuildComponent.ComponentType.BuildService)
                     {
                         plan1 = PrintView.GetBuildPlan(3, Components);
                         plan2 = PrintView.GetBuildPlan(2, Components);
@@ -221,7 +247,7 @@ namespace MicroCBuilder.Views
                     var border = new Border
                     {
                         BorderThickness = new Thickness(1, 0, 1, 1),
-                        BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Black),
+                        BorderBrush = new SolidColorBrush(Colors.Black),
                         Child = item
                     };
 
@@ -234,7 +260,7 @@ namespace MicroCBuilder.Views
                 var border2 = new Border()
                 {
                     Child = contents,
-                    BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Black),
+                    BorderBrush = new SolidColorBrush(Colors.Black),
                     BorderThickness = new Thickness(0, 1, 0, 0)
                 };
 
@@ -266,9 +292,10 @@ namespace MicroCBuilder.Views
 
             List<TextBox> serialInputs = new List<TextBox>();
             int row = 0;
-            foreach(var comp in vm.Components.Where(c => c.Item != null))
+            foreach (var comp in vm.Components.Where(c => c.Item != null))
             {
-                var label = new TextBlock() {
+                var label = new TextBlock()
+                {
                     Text = comp.Item.Name,
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     VerticalAlignment = VerticalAlignment.Center,
@@ -285,7 +312,8 @@ namespace MicroCBuilder.Views
                      * Create a text input for each quantity of each build component
                      */
 
-                    var input = new TextBox() {
+                    var input = new TextBox()
+                    {
                         PlaceholderText = "Serial",
                         HorizontalAlignment = HorizontalAlignment.Stretch,
                         Text = comp.Serials.Count > i ? comp.Serials[i] : ""
@@ -293,7 +321,7 @@ namespace MicroCBuilder.Views
 
                     input.KeyDown += (sender, args) =>
                     {
-                        if(args.Key == Windows.System.VirtualKey.Enter)
+                        if (args.Key == Windows.System.VirtualKey.Enter)
                         {
                             FocusManager.TryMoveFocus(FocusNavigationDirection.Down, new FindNextElementOptions()
                             {
@@ -352,17 +380,17 @@ namespace MicroCBuilder.Views
 
 
                 BuildComponent last = null;
-                foreach(var entry in serialInputs.Select(s => s.Tag).Cast<(BuildComponent comp, int index)>())
+                foreach (var entry in serialInputs.Select(s => s.Tag).Cast<(BuildComponent comp, int index)>())
                 {
                     /*
                      * Only add a single print entry if there are no serial numbers, otherwise do a single line item per serial number.
                      */
-                    if(entry.comp == last && string.IsNullOrEmpty(entry.comp.Serials[entry.index]))
+                    if (entry.comp == last && string.IsNullOrEmpty(entry.comp.Serials[entry.index]))
                     {
                         continue;
                     }
 
-                    if(string.IsNullOrEmpty(entry.comp.Serials[entry.index]))
+                    if (string.IsNullOrEmpty(entry.comp.Serials[entry.index]))
                     {
                         last = entry.comp;
                     }
@@ -376,7 +404,7 @@ namespace MicroCBuilder.Views
 
         public static async Task DoPrintBarcodes(List<BuildComponent> Components, List<(BuildComponent comp, int index)> serials)
         {
-            var itemsCount = Components.Count(c => c.Item != null);
+            var itemsCount = Components.Where(c => c.Item != null).Sum(c => c.Item.Quantity);
             if (itemsCount == 0)
             {
                 return;
@@ -443,7 +471,7 @@ namespace MicroCBuilder.Views
                     var border = new Border
                     {
                         BorderThickness = new Thickness(1, 0, 1, 1),
-                        BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Black),
+                        BorderBrush = new SolidColorBrush(Colors.Black),
                         Child = item
                     };
 
@@ -456,7 +484,7 @@ namespace MicroCBuilder.Views
                 var border2 = new Border()
                 {
                     Child = contents,
-                    BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Black),
+                    BorderBrush = new SolidColorBrush(Colors.Black),
                     BorderThickness = new Thickness(0, 1, 0, 0)
                 };
 
@@ -480,10 +508,14 @@ namespace MicroCBuilder.Views
             var stack = new StackPanel() { Orientation = Orientation.Vertical, Spacing = 5 };
 
             var cb = new CheckBox() { Content = "Split page", IsChecked = true };
+            var optLabel = new TextBlock() { Text = "Optional" };
             var buildTechTextBox = new TextBox() { PlaceholderText = "Build Tech" };
-            var extraTextBox = new TextBox() { PlaceholderText = "Annotation" };
+            var author = new TextBox() { PlaceholderText = "Author" };
+            var extraTextBox = new TextBox() { PlaceholderText = "Annotation", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
 
             stack.Children.Add(cb);
+            stack.Children.Add(optLabel);
+            stack.Children.Add(author);
             stack.Children.Add(buildTechTextBox);
             stack.Children.Add(extraTextBox);
 
@@ -496,7 +528,7 @@ namespace MicroCBuilder.Views
             };
             var result = await dialog.ShowAsync();
             var doSplit = cb.IsChecked ?? false;
-            if (result != ContentDialogResult.Secondary)
+            if (result == ContentDialogResult.Primary)
             {
                 List<string> extraStrings = new List<string>();
 
@@ -508,8 +540,21 @@ namespace MicroCBuilder.Views
                 {
                     extraStrings.Add(extraTextBox.Text);
                 }
-                
+
                 await DoPrintPromo(vm.Components.ToList(), extraStrings, doSplit);
+
+                if (!string.IsNullOrWhiteSpace(author.Text))
+                {
+                    if (vm.LibraryGuid != default)
+                    {
+                        await BuildLibrary.SaveExisting(vm.LibraryGuid, vm.Components.ToList(), author: author.Text);
+                    }
+                    else
+                    {
+                        var list = await BuildLibrary.SaveNew(vm.Components.ToList(), "Promo", author.Text);
+                        vm.LibraryGuid = list.Guid;
+                    }
+                }
             }
         }
 
@@ -592,7 +637,7 @@ namespace MicroCBuilder.Views
             }
             if (gpu?.Item != null && gpu.Item.Specs.ContainsKey("GPU Chipset"))
             {
-                promoItems.Add(new TextBlock() { Text = $"{gpu.Item.Specs["GPU Chipset"]}"});
+                promoItems.Add(new TextBlock() { Text = $"{gpu.Item.Specs["GPU Chipset"]}" });
             }
             if (ram != null && ram.Count(r => r.Item != null) > 0)
             {
@@ -605,7 +650,7 @@ namespace MicroCBuilder.Views
 
                 var first = ram.FirstOrDefault(r => r.Item != null);
                 string speed = "";
-                if(first?.Item != null && first.Item.Specs.ContainsKey("Memory Speed (MHz)"))
+                if (first?.Item != null && first.Item.Specs.ContainsKey("Memory Speed (MHz)"))
                 {
                     speed = first.Item.Specs["Memory Speed (MHz)"];
                 }
@@ -618,19 +663,19 @@ namespace MicroCBuilder.Views
                     promoItems.Add(new TextBlock() { Text = $"{ssd.Item.Specs["Capacity"]} {ssd.Item.Specs["Interface"]} SSD" });
                 }
             }
-            if(_case?.Item != null)
+            if (_case?.Item != null)
             {
                 promoItems.Add(new TextBlock() { Text = $"{_case.Item.Name}", TextWrapping = TextWrapping.WrapWholeWords, MaxLines = 1 });
             }
 
-            foreach(var text in extraStrings)
+            foreach (var text in extraStrings.SelectMany(s => s.Split('\r')))
             {
                 promoItems.Add(new TextBlock() { Text = text, TextWrapping = TextWrapping.NoWrap, MaxLines = 1 });
             }
 
             promoGrid.ColumnDefinitions.Add(new ColumnDefinition());
             promoGrid.VerticalAlignment = VerticalAlignment.Center;
-            foreach(var tb in promoItems)
+            foreach (var tb in promoItems)
             {
                 tb.FontSize = fontSize;
                 promoGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
@@ -664,9 +709,10 @@ namespace MicroCBuilder.Views
                 priceStrings.Add($"2 Year System Coverage - ${plan.Tiers[0].Price}");
                 priceStrings.Add($"3 Year System Coverage - ${plan.Tiers[1].Price}");
             }
-            for(int i = 0; i < priceStrings.Count; i++)
+            for (int i = 0; i < priceStrings.Count; i++)
             {
-                var tb = new TextBlock() {
+                var tb = new TextBlock()
+                {
                     Text = priceStrings[i],
                     TextAlignment = TextAlignment.Right
                 };
@@ -733,6 +779,7 @@ namespace MicroCBuilder.Views
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Star) });
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
             itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            itemsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
             foreach (var comp in Components.Where(c => c.Item != null))
             {
@@ -745,16 +792,17 @@ namespace MicroCBuilder.Views
                     item.Brand,
                     item.Name,
                     $"${item.Price:.00}",
+                    item.SKU,
                     $"Qty {comp.Item.Quantity}"
                 };
-                for(int i = 0; i < strings.Length; i++)
+                for (int i = 0; i < strings.Length; i++)
                 {
-                    var tb = new TextBlock() { Text = strings[i]};
+                    var tb = new TextBlock() { Text = strings[i] };
                     itemsGrid.Children.Add(tb);
                     Grid.SetRow(tb, itemsGrid.RowDefinitions.Count - 1);
                     Grid.SetColumn(tb, i);
 
-                    if(i >= 2)
+                    if (i >= 2)
                     {
                         tb.HorizontalTextAlignment = TextAlignment.Right;
                     }
@@ -771,7 +819,7 @@ namespace MicroCBuilder.Views
                 ("Total", $"${((1 + tax) * SubTotal):.00}"),
             };
 
-            foreach(var item in footerItems)
+            foreach (var item in footerItems)
             {
                 var tb1 = new TextBlock() { Text = item.name, HorizontalTextAlignment = TextAlignment.Right };
                 var tb2 = new TextBlock() { Text = item.value, HorizontalTextAlignment = TextAlignment.Right };

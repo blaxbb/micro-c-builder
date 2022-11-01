@@ -19,39 +19,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" BorderBrush="{StaticResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="1">
-            <ListView x:Name="ChecklistsListView" SelectionMode="Single" ItemsSource="{Binding Checklists}" SelectedItem="{Binding Checklist, Mode=TwoWay}">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Checklist">
-                        <Grid Margin="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <ProgressBar Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding Percentage}" VerticalAlignment="Stretch"/>
-                            <Button Grid.Row="0" Grid.Column="0" VerticalAlignment="Stretch" Margin="0,0,10,0" Click="FavoriteChecklistClick">
-                                <Grid>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE734;" Foreground="White"/>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE735;" Foreground="Yellow" Visibility="{Binding IsFavorited, Converter={StaticResource HideIfNull}}"/>
-                                </Grid>
-                            </Button>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}" FontSize="24" Margin="20,5,0,5" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Grid.Row="0" Grid.Column="2" FontSize="24" Margin="0,5,20,5">
-                                <Span>
-                                    <Run Text="{Binding Completed}"/>
-                                </Span>
-                                <Span>/</Span>
-                                <Span>
-                                    <Run Text="{Binding Items.Count}"/>
-                                </Span>
-                            </TextBlock>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+            <local:ChecklistIndexControl />
         </Border>
         <Border Grid.Column="1" BorderBrush="{StaticResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="1" Padding="20">
             <Grid RowSpacing="20">
@@ -73,6 +41,7 @@
                                 <Grid.ContextFlyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem Text="Edit" Icon="Edit" Command="{Binding DataContext.EditItemCommand, ElementName=page}" CommandParameter="{Binding }"/>
+                                        <MenuFlyoutItem Text="Delete" Icon="Delete" Command="{Binding DataContext.DeleteItemCommand, ElementName=page}" CommandParameter="{Binding }"/>
                                     </MenuFlyout>
                                 </Grid.ContextFlyout>
                                 <Grid.ColumnDefinitions>

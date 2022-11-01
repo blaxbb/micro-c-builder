@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
+
 namespace MicroCBuilder.ViewModels
 {
     public class LandingPageViewModel : BaseViewModel
@@ -14,7 +15,7 @@ namespace MicroCBuilder.ViewModels
         public Command<string> NewBuildCommand { get; }
         public ObservableCollection<BuildInfo> BuildTemplates { get; }
 
-        public delegate void CreateBuildEventHandler(object sender, BuildInfo name);
+        public delegate void CreateBuildEventHandler(object sender, ProductList list);
         public event CreateBuildEventHandler OnCreateBuild;
 
         public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
@@ -22,10 +23,6 @@ namespace MicroCBuilder.ViewModels
 
         public ObservableCollection<FlareInfo> Flares { get; set; }
         public Command UpdateNetworkFlares { get; }
-
-        public ObservableCollection<Checklist> ChecklistItems { get; set; }
-        public Command UpdateNetworkChecklistFlares { get; }
-        public Command NewChecklistCommand { get; }
 
         public Command<FlareInfo> PrintBuildCommand { get; }
         public Command<FlareInfo> OutputSignsCommand { get; }
@@ -36,29 +33,6 @@ namespace MicroCBuilder.ViewModels
             NewBuildCommand = new Command<string>((name) => OnCreateBuild?.Invoke(this, GetInfo(name)));
 
             Flares = new ObservableCollection<FlareInfo>();
-            ChecklistItems = new ObservableCollection<Checklist>();
-
-            ChecklistFavoriteCache.OnChecklistFavoritesUpdated += async (favorites) =>
-            {
-                foreach (var checklist in ChecklistItems)
-                {
-                    checklist.IsFavorited = favorites.IsFavorited(checklist);
-                }
-
-                foreach (var fav in favorites.Favorites)
-                {
-                    var existing = ChecklistItems.FirstOrDefault(c => c.Id == fav.Id);
-                    if (existing == null)
-                    {
-                        ChecklistItems.Add(fav.Clone());
-                    }
-                    else
-                    {
-                        await ChecklistFavoriteCache.Current.AddItem(existing);
-                    }
-                }
-            };
-
 
             UpdateNetworkFlares = new Command(async (o) =>
             {
@@ -71,16 +45,16 @@ namespace MicroCBuilder.ViewModels
 
                 var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-{Settings.StoreID()}");
                 var toAdd = flares.Where(f => Flares.All(existing => existing.Flare.ShortCode != f.ShortCode)).OrderBy(f => f.Created).ToList();
-                foreach(var f in toAdd)
+                foreach (var f in toAdd)
                 {
                     AddBuildFlare(f);
                 }
 
                 var toRemove = Flares.Where(f => flares.All(updated => updated.ShortCode != f.Flare.ShortCode)).ToList();
-                foreach(var f in toRemove)
+                foreach (var f in toRemove)
                 {
                     var index = Flares.ToList().FindIndex(check => check.Flare.ShortCode == f.Flare.ShortCode);
-                    if(index >= 0 && index < Flares.Count)
+                    if (index >= 0 && index < Flares.Count)
                     {
                         Flares.RemoveAt(index);
                     }
@@ -92,69 +66,6 @@ namespace MicroCBuilder.ViewModels
                 }
             });
             UpdateNetworkFlares.Execute(null);
-
-            UpdateNetworkChecklistFlares = new Command(async (o) =>
-            {
-                var flares = await Flare.GetTag("https://dataflare.bbarrett.me/api/Flare", $"micro-c-checklist-{Settings.StoreID()}");
-                var sharedPassword = Settings.SharedPassword();
-                var aesInfo = AesInfo.FromPassword(sharedPassword);
-                var latestItems = flares.Select(f =>
-                {
-                    try
-                    {
-                        var checklist = f.TryDecrypt<Checklist>(aesInfo);
-                        checklist.data.Created = f.Created;
-                        checklist.data.UseEncryption = checklist.encrypted;
-                        checklist.data.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(checklist.data) ?? false;
-                        return checklist.data;
-                    }
-                    catch (Exception e)
-                    {
-                        return default;
-                    }
-                }).ToList();
-
-                var toRemove = ChecklistItems.Where(checklist => !latestItems.Any(c => checklist.Id == c.Id));
-                foreach (var f in toRemove)
-                {
-                    ChecklistItems.Remove(f);
-                }
-
-                foreach (var newChecklist in latestItems)
-                {
-                    if (newChecklist.IsFavorited)
-                    {
-                        await ChecklistFavoriteCache.Current.AddItem(newChecklist);
-                    }
-
-                    var existing = ChecklistItems.FirstOrDefault(c => c.Id == newChecklist.Id);
-                    if (existing != null && existing.Created < newChecklist.Created)
-                    {
-                        existing.Created = newChecklist.Created;
-                        existing.Items = newChecklist.Items;
-                        existing.Name = newChecklist.Name;
-                    }
-                    else
-                    {
-                        ChecklistItems.Add(newChecklist);
-                    }
-                }
-
-                var favorites = ChecklistFavoriteCache.Current.Favorites.ToList();
-                foreach(var fav in favorites)
-                {
-                    if(!ChecklistItems.Any( c => c.Id == fav.Id))
-                    {
-                        ChecklistItems.Add(fav.Clone());
-                    }
-                }
-            });
-            UpdateNetworkChecklistFlares.Execute(null);
-
-            NewChecklistCommand = new Command((o) =>
-            {
-                OnCreateChecklist?.Invoke(this, new Checklist());
-            });
 
             PrintBuildCommand = new Command<FlareInfo>(async (info) =>
             {
@@ -168,13 +79,13 @@ namespace MicroCBuilder.ViewModels
 
             FlareHubManager.Subscribe($"micro-c-{Settings.StoreID()}");
             FlareHubManager.Subscribe($"micro-c-checklist-{Settings.StoreID()}");
-            var dispatcher = MainWindow.Current.DispatcherQueue;
-            FlareHubManager.OnFlareReceived += (flare) =>
+            
+            FlareHubManager.OnFlareReceived += async (flare) =>
             {
+                var dispatcher = MainWindow.Current.DispatcherQueue;
                 dispatcher.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
                     AddBuildFlare(flare);
-                    AddChecklistFlare(flare);
                 });
             };
 
@@ -220,70 +131,14 @@ namespace MicroCBuilder.ViewModels
             }
         }
 
-        private async void AddChecklistFlare(Flare flare)
+        private ProductList GetInfo(string name)
         {
-            if (flare.Tag != $"micro-c-checklist-{Settings.StoreID()}")
+            var template = BuildTemplates.FirstOrDefault(b => b.Name == name);
+            return new ProductList()
             {
-                return;
-            }
-
-
-            var sharedPassword = Settings.SharedPassword();
-
-            AesInfo? aesInfo = null;
-            if (!string.IsNullOrWhiteSpace(sharedPassword))
-            {
-                aesInfo = AesInfo.FromPassword(sharedPassword);
-            }
-
-            Checklist newChecklist = null;
-
-            if (aesInfo != null)
-            {
-                var (data, encrypted) = flare.TryDecrypt<Checklist>(aesInfo);
-                newChecklist = data;
-            }
-            else
-            {
-                try
-                {
-                    newChecklist = (Checklist)flare.Value(typeof(Checklist));
-                }
-                catch (Exception ex)
-                {
-                    //flare is likely encrypted (or possibly malformed)
-                }
-            }
-
-            if (newChecklist == null)
-            {
-                return;
-            }
-            newChecklist.Created = flare.Created;
-            newChecklist.IsFavorited = ChecklistFavoriteCache.Current?.IsFavorited(newChecklist) ?? false;
-
-            if (newChecklist.IsFavorited)
-            {
-                await ChecklistFavoriteCache.Current.AddItem(newChecklist);
-            }
-
-            var existing = ChecklistItems.FirstOrDefault(c => c.Id == newChecklist.Id);
-            if (existing != null && existing.Created < newChecklist.Created)
-            {
-                var index = ChecklistItems.IndexOf(existing);
-
-                ChecklistItems.Remove(existing);
-                ChecklistItems.Insert(index, newChecklist);
-            }
-            else
-            {
-                ChecklistItems.Add(newChecklist);
-            }
-        }
-
-        private BuildInfo GetInfo(string name)
-        {
-            return BuildTemplates.FirstOrDefault(b => b.Name == name);
+                Name = template.Name,
+                Components = template.Components,
+            };
         }
     }
 
@@ -305,7 +160,7 @@ namespace MicroCBuilder.ViewModels
         {
             Flare = flare;
             var password = Settings.SharedPassword();
-            if(string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(password))
             {
                 Components = (List<BuildComponent>)flare.Value(typeof(List<BuildComponent>));
                 IsEncrypted = false;

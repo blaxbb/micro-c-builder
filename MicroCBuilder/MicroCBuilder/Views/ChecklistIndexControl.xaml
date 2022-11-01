@@ -1,0 +1,88 @@
+﻿<UserControl
+    x:Class="MicroCBuilder.Views.ChecklistIndexControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MicroCBuilder.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:MicroCBuilder.Models"
+    xmlns:viewmodels="using:MicroCBuilder.ViewModels"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+    <UserControl.DataContext>
+        <viewmodels:ChecklistIndexControlViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Grid.Column="1" Grid.Row="1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <!--#region rightColumn-->
+        <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Checklists" VerticalAlignment="Center" FontSize="24" Margin="10,0,0,0"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Grid.Row="0" Grid.Column="1" Spacing="10">
+            <Button Style="{ThemeResource ButtonRevealStyle}" Command="{Binding UpdateNetworkChecklistFlares}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Text="Refresh" Padding="0,0,10,0"/>
+                    <SymbolIcon Symbol="Refresh"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{ThemeResource ButtonRevealStyle}" Command="{Binding NewChecklistCommand}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Text="New" Padding="0,0,10,0"/>
+                    <SymbolIcon Symbol="Add"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource SystemControlBackgroundBaseLowRevealBorderBrush}"/>
+
+        <ListView Grid.Row="1" Grid.ColumnSpan="2" ItemsSource="{Binding Items}" DoubleTapped="ChecklistFlareDoubleTapped">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                    <Setter Property="VerticalContentAlignment" Value="Stretch"></Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:Checklist">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <ProgressBar Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding Percentage}" VerticalAlignment="Stretch"/>
+                        <Button Grid.Row="0" Grid.Column="0" VerticalAlignment="Stretch" Margin="0,0,10,0" Click="FavoriteChecklistClick">
+                            <Grid>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE734;" Foreground="White"/>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE735;" Foreground="Yellow" Visibility="{Binding IsFavorited, Converter={StaticResource HideIfNull}}"/>
+                            </Grid>
+                        </Button>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}" FontSize="24" Margin="20,5,0,5" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" FontSize="24" Margin="0,5,20,5">
+                                <Span>
+                                    <Run Text="{Binding Completed}"/>
+                                </Span>
+                                <Span>/</Span>
+                                <Span>
+                                    <Run Text="{Binding Items.Count}"/>
+                                </Span>
+                        </TextBlock>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!--#endregion-->
+
+    </Grid>
+</UserControl>

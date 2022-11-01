@@ -29,11 +29,8 @@ namespace MicroCBuilder.Views
     /// </summary>
     public sealed partial class LandingPage : Page
     {
-        public delegate void CreateBuildEventHandler(object sender, BuildInfo info);
+        public delegate void CreateBuildEventHandler(object sender, ProductList info);
         public event CreateBuildEventHandler OnCreateBuild;
-
-        public delegate void CreateChecklistEventHandler(object sender, Checklist checklist);
-        public event CreateChecklistEventHandler OnCreateChecklist;
 
         string[] files = new string[]
         {
@@ -51,7 +48,6 @@ namespace MicroCBuilder.Views
             if (DataContext is LandingPageViewModel vm)
             {
                 vm.OnCreateBuild += CreateBuild;
-                vm.OnCreateChecklist += CreateChecklist;
                 //TimeSpan period = TimeSpan.FromSeconds(30);
 
                 //ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
@@ -69,7 +65,7 @@ namespace MicroCBuilder.Views
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
 
-            foreach(var name in files)
+            foreach (var name in files)
             {
                 string fname = $@"Assets\BuildTemplates\{name}.build";
                 StorageFolder InstallationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
@@ -82,7 +78,7 @@ namespace MicroCBuilder.Views
                         Name = name,
                         Components = JsonConvert.DeserializeObject<List<BuildComponent>>(json)
                     };
-                    if(DataContext is LandingPageViewModel vm)
+                    if (DataContext is LandingPageViewModel vm)
                     {
                         vm.BuildTemplates.Add(info);
                     }
@@ -90,56 +86,24 @@ namespace MicroCBuilder.Views
             }
         }
 
-        private void CreateBuild(object sender, BuildInfo info)
+        private void CreateBuild(object sender, ProductList list)
         {
-            if (info != null)
+            if (list != null)
             {
-                OnCreateBuild?.Invoke(this, info);
+                OnCreateBuild?.Invoke(this, list);
             }
-        }
-
-        private void CreateChecklist(object sender, Checklist checklist)
-        {
-            OnCreateChecklist?.Invoke(this, checklist);
         }
 
         private void FlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            if(e.OriginalSource is FrameworkElement ele && ele.DataContext is FlareInfo info)
+            if (e.OriginalSource is FrameworkElement ele && ele.DataContext is FlareInfo info)
             {
-                CreateBuild(sender, new BuildInfo()
+                CreateBuild(sender, new ProductList()
                 {
                     Name = info.Flare.Title,
                     Components = info.Components
                 });
             }
         }
-
-        private void ChecklistFlareDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            if (e.OriginalSource is FrameworkElement ele && ele.DataContext is Checklist checklist)
-            {
-                CreateChecklist(sender, checklist);
-            }
-        }
-
-        private void FavoriteChecklistClick(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button b && b.DataContext is Checklist checklist)
-            {
-                if (checklist.IsFavorited)
-                {
-                    ChecklistFavoriteCache.Current?.RemoveItem(checklist);
-                    checklist.IsFavorited = false;
-                }
-                else
-                {
-                    ChecklistFavoriteCache.Current?.AddItem(checklist);
-                    checklist.IsFavorited = true;
-                }
-            }
-        }
     }
-
-
 }
